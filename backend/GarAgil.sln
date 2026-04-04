@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GarAgil.Api", "GarAgil.Api\GarAgil.Api.csproj", "{61EB381C-2215-4989-8238-B59544FB94A7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GarAgil.Application", "GarAgil.Application\GarAgil.Application.csproj", "{629D2C83-59D8-4CC6-ACB6-7AD05F078B05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GarAgil.Domain", "GarAgil.Domain\GarAgil.Domain.csproj", "{D35B3056-E57B-41BA-8E91-01B97D456B3B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GarAgil.Infrastructure", "GarAgil.Infrastructure\GarAgil.Infrastructure.csproj", "{0D6EC85D-7D4B-42B7-807B-B39F1EED3C95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GarAgil.Tests", "GarAgil.Tests\GarAgil.Tests.csproj", "{FCC6448D-9E39-40EE-AFB8-87E39C3F70C4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{61EB381C-2215-4989-8238-B59544FB94A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61EB381C-2215-4989-8238-B59544FB94A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61EB381C-2215-4989-8238-B59544FB94A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61EB381C-2215-4989-8238-B59544FB94A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{629D2C83-59D8-4CC6-ACB6-7AD05F078B05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{629D2C83-59D8-4CC6-ACB6-7AD05F078B05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{629D2C83-59D8-4CC6-ACB6-7AD05F078B05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{629D2C83-59D8-4CC6-ACB6-7AD05F078B05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D35B3056-E57B-41BA-8E91-01B97D456B3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D35B3056-E57B-41BA-8E91-01B97D456B3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D35B3056-E57B-41BA-8E91-01B97D456B3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D35B3056-E57B-41BA-8E91-01B97D456B3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D6EC85D-7D4B-42B7-807B-B39F1EED3C95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D6EC85D-7D4B-42B7-807B-B39F1EED3C95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D6EC85D-7D4B-42B7-807B-B39F1EED3C95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D6EC85D-7D4B-42B7-807B-B39F1EED3C95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCC6448D-9E39-40EE-AFB8-87E39C3F70C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCC6448D-9E39-40EE-AFB8-87E39C3F70C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCC6448D-9E39-40EE-AFB8-87E39C3F70C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCC6448D-9E39-40EE-AFB8-87E39C3F70C4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
