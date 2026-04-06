@@ -88,10 +88,20 @@ const KanbanBoard: React.FC = () => {
                   key={order.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, order.id)}
-                  className="bg-white p-3 rounded shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-shadow"
+                  className="bg-white p-3 rounded shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-shadow flex flex-col justify-between"
                 >
-                  <div className="font-bold text-gray-900">{order.vehiclePlate}</div>
-                  <div className="text-sm text-gray-600 mt-1">{order.description}</div>
+                  <div>
+                    <div className="font-bold text-gray-900">{order.vehiclePlate}</div>
+                    <div className="text-sm text-gray-600 mt-1">{order.description}</div>
+                  </div>
+                  {order.status === 3 && (
+                    <button
+                      onClick={() => handleDrop({ preventDefault: () => {} } as any, 4, order.id)}
+                      className="mt-3 w-full px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700 transition-colors"
+                    >
+                      Finalizar Serviço
+                    </button>
+                  )}
                 </div>
               ))}
               {orders.filter(o => o.status === column.id).length === 0 && (
