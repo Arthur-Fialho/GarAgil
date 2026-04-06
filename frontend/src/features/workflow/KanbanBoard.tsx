@@ -45,9 +45,10 @@ const KanbanBoard: React.FC = () => {
     e.preventDefault(); // Necessary to allow dropping
   };
 
-  const handleDrop = async (e: React.DragEvent, targetStatusId: number) => {
-    e.preventDefault();
-    const orderId = e.dataTransfer.getData('orderId');
+  const handleDrop = async (e: React.DragEvent | null, targetStatusId: number, overrideOrderId?: string) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const orderId = overrideOrderId || (e?.dataTransfer ? e.dataTransfer.getData('orderId') : null);
+    if (!orderId) return;
     
     // Optimistic UI update
     setOrders(prev => 
@@ -56,10 +57,34 @@ const KanbanBoard: React.FC = () => {
 
     try {
       await api.patch(`/serviceorders/${orderId}/status`, { status: targetStatusId });
+      if (targetStatusId === 4 || targetStatusId === 5) {
+        fetchOrders();
+      }
     } catch (error) {
       console.error('Erro ao atualizar status', error);
       // Revert on failure
       fetchOrders();
+    }
+  };
+
+  const handleEmitNf = async (orderId: string) => {
+    try {
+      await api.post(`/serviceorders/${orderId}/emit-nf`);
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, isNfEmitted: true } : o));
+    } catch (error) {
+      console.error('Erro ao emitir NF', error);
+      alert('Erro ao emitir Nota Fiscal.');
+    }
+  };
+
+  const handleCancel = async (orderId: string) => {
+    if (window.confirm('Tem certeza que deseja cancelar esta ordem de serviço?')) {
+      try {
+        await api.patch(`/serviceorders/${orderId}/status`, { status: 5 }); // 5 is Cancelado
+        fetchOrders();
+      } catch (error) {
+        console.error('Erro ao cancelar ordem', error);
+      }
     }
   };
 
@@ -89,10 +114,17 @@ const KanbanBoard: React.FC = () => {
                   key={order.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, order.id)}
-                  className="bg-white p-3 rounded shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-shadow flex flex-col justify-between"
+                  className="bg-white p-3 rounded shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-shadow flex flex-col justify-between relative group"
                 >
+                  <button 
+                    onClick={() => handleCancel(order.id)}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Cancelar Serviço"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  </button>
                   <div>
-                    <div className="font-bold text-gray-900">{order.vehiclePlate}</div>
+                    <div className="font-bold text-gray-900 pr-5">{order.vehiclePlate}</div>
                     <div className="text-sm text-gray-600 mt-1">{order.description}</div>
                   </div>
                   {order.status === 3 && !order.isNfEmitted && (

@@ -20,8 +20,8 @@ const ServiceHistory: React.FC = () => {
     try {
       setLoading(true);
       const response = await api.get('/serviceorders');
-      // Filter only "Finalizado" (status == 4)
-      setOrders(response.data.filter((o: ServiceOrder) => o.status === 4));
+      // Filter "Finalizado" (status == 4) and "Cancelado" (status == 5)
+      setOrders(response.data.filter((o: ServiceOrder) => o.status === 4 || o.status === 5));
     } catch (error) {
       console.error('Erro ao buscar histórico', error);
     } finally {
@@ -59,8 +59,8 @@ const ServiceHistory: React.FC = () => {
                 {order.description}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                  Finalizado
+                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${order.status === 4 ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800'}`}>
+                  {order.status === 4 ? 'Finalizado' : 'Cancelado'}
                 </span>
               </td>
             </tr>
@@ -68,7 +68,7 @@ const ServiceHistory: React.FC = () => {
           {orders.length === 0 && (
             <tr>
               <td colSpan={3} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                Nenhum serviço finalizado ainda.
+                Nenhum serviço finalizado ou cancelado ainda.
               </td>
             </tr>
           )}
