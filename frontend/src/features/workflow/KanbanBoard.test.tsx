@@ -13,6 +13,9 @@ const server = setupServer(
   http.get('*/serviceorders', () => {
     return HttpResponse.json(mockOrders);
   }),
+  http.post('*/serviceorders', async () => {
+    return HttpResponse.json({ id: '999', vehiclePlate: 'XYZ-1234', description: 'Revisão', status: 0 }, { status: 201 });
+  }),
   http.patch('*/serviceorders/:id/status', async ({ request, params }) => {
     const { id } = params;
     const body = await request.json() as any;

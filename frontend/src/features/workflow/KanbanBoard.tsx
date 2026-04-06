@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
+import ServiceOrderForm from './ServiceOrderForm';
 
 interface ServiceOrder {
   id: string;
@@ -56,7 +57,7 @@ const KanbanBoard: React.FC = () => {
       await api.patch(`/serviceorders/${orderId}/status`, { status: targetStatusId });
     } catch (error) {
       console.error('Erro ao atualizar status', error);
-      // Revert on failure (could refetch, but a simple refetch works too)
+      // Revert on failure
       fetchOrders();
     }
   };
@@ -66,38 +67,42 @@ const KanbanBoard: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 w-full overflow-x-auto pb-4">
-      {COLUMNS.map(column => (
-        <div 
-          key={column.id}
-          className={`flex-1 min-w-[250px] rounded-lg border border-gray-200 shadow-sm p-4 ${column.bgColor}`}
-          onDragOver={handleDragOver}
-          onDrop={(e) => handleDrop(e, column.id)}
-        >
-          <h4 className="font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2">
-            {column.title}
-          </h4>
-          
-          <div className="space-y-3 min-h-[150px]">
-            {orders.filter(o => o.status === column.id).map(order => (
-              <div 
-                key={order.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, order.id)}
-                className="bg-white p-3 rounded shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-shadow"
-              >
-                <div className="font-bold text-gray-900">{order.vehiclePlate}</div>
-                <div className="text-sm text-gray-600 mt-1">{order.description}</div>
-              </div>
-            ))}
-            {orders.filter(o => o.status === column.id).length === 0 && (
-              <div className="text-sm text-gray-400 italic text-center py-2">
-                Nenhum veículo
-              </div>
-            )}
+    <div className="flex flex-col w-full h-full">
+      <ServiceOrderForm onSuccess={fetchOrders} />
+      
+      <div className="flex flex-col sm:flex-row gap-4 w-full overflow-x-auto pb-4">
+        {COLUMNS.map(column => (
+          <div 
+            key={column.id}
+            className={`flex-1 min-w-[250px] rounded-lg border border-gray-200 shadow-sm p-4 ${column.bgColor}`}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, column.id)}
+          >
+            <h4 className="font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2">
+              {column.title}
+            </h4>
+            
+            <div className="space-y-3 min-h-[150px]">
+              {orders.filter(o => o.status === column.id).map(order => (
+                <div 
+                  key={order.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, order.id)}
+                  className="bg-white p-3 rounded shadow-sm border border-gray-100 cursor-move hover:shadow-md transition-shadow"
+                >
+                  <div className="font-bold text-gray-900">{order.vehiclePlate}</div>
+                  <div className="text-sm text-gray-600 mt-1">{order.description}</div>
+                </div>
+              ))}
+              {orders.filter(o => o.status === column.id).length === 0 && (
+                <div className="text-sm text-gray-400 italic text-center py-2">
+                  Nenhum veículo
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
