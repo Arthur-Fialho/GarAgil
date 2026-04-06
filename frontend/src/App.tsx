@@ -199,23 +199,3 @@ function App() {
 }
 
 export default App;
-.5 text-xs font-medium text-green-800">
-              <span className="w-2 h-2 mr-1.5 bg-green-500 rounded-full"></span>
-              Sistema Online
-            </span>
-          </div>
-        </header>
-
-        {/* Dynamic View */}
-        <div className="flex-1 overflow-auto p-4 md:p-8">
-          <div className="max-w-7xl mx-auto h-full">
-            {renderContent()}
-          </div>
-        </div>
-      </main>
-
-    </div>
-  );
-}
-
-export default App;
