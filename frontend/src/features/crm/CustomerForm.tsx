@@ -29,38 +29,48 @@ const CustomerForm: React.FC = () => {
       setDocument('');
     } catch (error) {
       console.error('Erro ao cadastrar cliente', error);
-      // Aqui poderíamos adicionar um tratamento de erro mais complexo
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      {successMsg && <div style={{ color: 'green', marginBottom: '10px' }}>{successMsg}</div>}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {successMsg && (
+        <div className="p-3 bg-green-50 text-green-700 border border-green-200 rounded-md">
+          {successMsg}
+        </div>
+      )}
+      
       <div>
-        <label htmlFor="name">Nome Completo</label>
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nome Completo</label>
         <input 
           id="name" 
           value={name} 
           onChange={(e) => setName(e.target.value)} 
           disabled={isLoading}
+          className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border ${errors.name ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}`}
         />
-        {errors.name && <span style={{ color: 'red' }}>{errors.name}</span>}
+        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
       </div>
+      
       <div>
-        <label htmlFor="document">CPF ou CNPJ</label>
+        <label htmlFor="document" className="block text-sm font-medium text-gray-700">CPF ou CNPJ</label>
         <input 
           id="document" 
           value={document} 
           onChange={(e) => setDocument(e.target.value)} 
           disabled={isLoading}
+          className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border ${errors.document ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}`}
         />
-        {errors.document && <span style={{ color: 'red' }}>{errors.document}</span>}
+        {errors.document && <p className="mt-1 text-sm text-red-600">{errors.document}</p>}
       </div>
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? 'Aguarde...' : 'Cadastrar Cliente'}
-      </Button>
+      
+      <div className="pt-2">
+        <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+          {isLoading ? 'Aguarde...' : 'Cadastrar Cliente'}
+        </Button>
+      </div>
     </form>
   );
 };
