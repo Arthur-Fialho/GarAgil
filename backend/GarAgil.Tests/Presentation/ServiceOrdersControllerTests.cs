@@ -61,6 +61,7 @@ public class ServiceOrdersControllerTests : IClassFixture<WebApplicationFactory<
         var request = new
         {
             VehiclePlate = "KBM-1234",
+            VehicleModel = "Civic 1.6",
             Description = "Troca de disco de freio"
         };
 
@@ -81,6 +82,7 @@ public class ServiceOrdersControllerTests : IClassFixture<WebApplicationFactory<
         var createRequest = new
         {
             VehiclePlate = "AAA-1111",
+            VehicleModel = "Civic 1.6",
             Description = "Revisão geral"
         };
         var createResponse = await client.PostAsJsonAsync("/api/serviceorders", createRequest);

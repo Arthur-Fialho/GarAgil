@@ -3,7 +3,10 @@ namespace GarAgil.Domain.Workflow;
 public enum ServiceOrderStatus
 {
     Orcamento,
+    OrcamentoEnviado,
     Aprovado,
     EmManutencao,
-    Pronto
+    Pronto,
+    Finalizado,
+    Cancelado
 }
