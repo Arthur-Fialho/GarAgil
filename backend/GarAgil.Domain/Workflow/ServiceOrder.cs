@@ -39,4 +39,20 @@ public class ServiceOrder
             
         Status = ServiceOrderStatus.EmManutencao;
     }
+
+    public void FinishMaintenance()
+    {
+        if (Status != ServiceOrderStatus.EmManutencao)
+            throw new InvalidOperationException("Apenas ordens em manutenção podem ser finalizadas.");
+            
+        Status = ServiceOrderStatus.Pronto;
+    }
+
+    public void UpdateStatus(ServiceOrderStatus newStatus)
+    {
+        // Simple generic update for Kanban drag-and-drop.
+        // In a real scenario, we might want to check strict paths, 
+        // but Kanban often allows moving cards freely (e.g., reverting to Aprovado).
+        Status = newStatus;
+    }
 }
