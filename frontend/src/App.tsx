@@ -54,7 +54,7 @@ function App() {
           {/* Financial Section */}
           <section className="bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:px-6 border-b border-gray-200 bg-gray-50">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">3. Financeiro: Emissão de Notas</h3>
+              <h3 className="text-lg leading-6 font-medium text-gray-900">4. Financeiro: Emissão de Notas</h3>
             </div>
             <div className="px-4 py-5 sm:p-6 flex flex-col sm:flex-row gap-4">
               <TaxInvoiceButton type="product" onIssue={() => alert('Emitindo NF-e (Produto)...')} />
@@ -66,6 +66,22 @@ function App() {
           <section className="bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:px-6 border-b border-gray-200 bg-gray-50">
               <h3 className="text-lg leading-6 font-medium text-gray-900">4. Comunicação: Editor de Mensagem WhatsApp</h3>
+            </div>
+            <div className="px-4 py-5 sm:p-6">
+              <div className="max-w-xl">
+                <MessageTemplateEditor onSave={(template) => alert(`Modelo salvo: ${template}`)} />
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+Name="text-lg leading-6 font-medium text-gray-900">4. Comunicação: Editor de Mensagem WhatsApp</h3>
             </div>
             <div className="px-4 py-5 sm:p-6">
               <div className="max-w-xl">
