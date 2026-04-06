@@ -9,6 +9,10 @@ public class ServiceOrder
     public string Description { get; private set; }
     public ServiceOrderStatus Status { get; private set; }
 
+#pragma warning disable CS8618
+    private ServiceOrder() { }
+#pragma warning restore CS8618
+
     public ServiceOrder(string vehiclePlate, string description)
     {
         if (string.IsNullOrWhiteSpace(vehiclePlate))

@@ -11,6 +11,10 @@ public class Customer
     public string Email { get; private set; }
     public string Phone { get; private set; }
 
+#pragma warning disable CS8618
+    private Customer() { }
+#pragma warning restore CS8618
+
     public Customer(string name, string document, string email, string phone)
     {
         if (string.IsNullOrWhiteSpace(name))

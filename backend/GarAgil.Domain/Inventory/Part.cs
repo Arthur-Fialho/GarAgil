@@ -11,6 +11,10 @@ public class Part
     public decimal SellingPrice { get; private set; }
     public int CurrentStock { get; private set; }
 
+#pragma warning disable CS8618
+    private Part() { }
+#pragma warning restore CS8618
+
     public Part(string name, string sku, decimal costPrice, decimal sellingPrice, int initialStock)
     {
         if (string.IsNullOrWhiteSpace(name))

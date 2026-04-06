@@ -11,6 +11,10 @@ public class PayableAccount
     public bool IsPaid { get; private set; }
     public DateTime? PaymentDate { get; private set; }
 
+#pragma warning disable CS8618
+    private PayableAccount() { }
+#pragma warning restore CS8618
+
     public PayableAccount(string description, decimal amount, DateTime dueDate)
     {
         if (string.IsNullOrWhiteSpace(description))
