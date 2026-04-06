@@ -17,9 +17,9 @@ if (string.IsNullOrEmpty(connectionString))
     connectionString = "Host=localhost;Database=GarAgilDb;Username=postgres;Password=SuperSecretPassword123!";
 }
 
-// Register DbContext with PostgreSQL
+// Register DbContext with InMemoryDatabase for easy local prototyping
 builder.Services.AddDbContext<GarAgilDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseInMemoryDatabase("GarAgilDb"));
 
 // Register AI Gateway using HttpClient
 builder.Services.AddHttpClient<GarAgil.Infrastructure.AI.GeminiGateway>();
