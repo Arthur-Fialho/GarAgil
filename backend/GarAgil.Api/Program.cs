@@ -29,6 +29,10 @@ builder.Services.AddScoped<GarAgil.Domain.Communication.IPredictiveMaintenanceAi
 builder.Services.AddScoped<GarAgil.Domain.CRM.IDocumentOcrAi>(sp => sp.GetRequiredService<GarAgil.Infrastructure.AI.GeminiGateway>());
 builder.Services.AddScoped<GarAgil.Domain.Inventory.IInvoiceReaderAi>(sp => sp.GetRequiredService<GarAgil.Infrastructure.AI.GeminiGateway>());
 
+// Register Application Services
+builder.Services.AddScoped<GarAgil.Application.Workflow.BudgetingService>();
+builder.Services.AddScoped<GarAgil.Application.CRM.FeedbackAnalysisService>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
