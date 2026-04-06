@@ -21,6 +21,7 @@ if (string.IsNullOrEmpty(connectionString))
 builder.Services.AddDbContext<GarAgilDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -34,4 +35,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapControllers();
+
 app.Run();
+
+public partial class Program { }

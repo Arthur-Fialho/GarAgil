@@ -1,0 +1,40 @@
+using GarAgil.Domain.CRM;
+using GarAgil.Infrastructure.Data;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+
+namespace GarAgil.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class CustomersController : ControllerBase
+{
+    private readonly GarAgilDbContext _context;
+
+    public CustomersController(GarAgilDbContext context)
+    {
+        _context = context;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateCustomer([FromBody] CreateCustomerRequest request)
+    {
+        if (request == null)
+            return BadRequest();
+
+        var customer = new Customer(request.Name, request.Document, request.Email, request.Phone);
+
+        _context.Customers.Add(customer);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(CreateCustomer), new { id = customer.Id }, customer);
+    }
+}
+
+public class CreateCustomerRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Document { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+}
