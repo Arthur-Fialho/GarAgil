@@ -21,6 +21,14 @@ if (string.IsNullOrEmpty(connectionString))
 builder.Services.AddDbContext<GarAgilDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+// Register AI Gateway using HttpClient
+builder.Services.AddHttpClient<GarAgil.Infrastructure.AI.GeminiGateway>();
+builder.Services.AddScoped<GarAgil.Domain.Workflow.ISmartBudgetingAi>(sp => sp.GetRequiredService<GarAgil.Infrastructure.AI.GeminiGateway>());
+builder.Services.AddScoped<GarAgil.Domain.CRM.ISentimentAnalysisAi>(sp => sp.GetRequiredService<GarAgil.Infrastructure.AI.GeminiGateway>());
+builder.Services.AddScoped<GarAgil.Domain.Communication.IPredictiveMaintenanceAi>(sp => sp.GetRequiredService<GarAgil.Infrastructure.AI.GeminiGateway>());
+builder.Services.AddScoped<GarAgil.Domain.CRM.IDocumentOcrAi>(sp => sp.GetRequiredService<GarAgil.Infrastructure.AI.GeminiGateway>());
+builder.Services.AddScoped<GarAgil.Domain.Inventory.IInvoiceReaderAi>(sp => sp.GetRequiredService<GarAgil.Infrastructure.AI.GeminiGateway>());
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
