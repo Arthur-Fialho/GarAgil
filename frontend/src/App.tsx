@@ -10,6 +10,7 @@ type Tab = 'workflow' | 'history' | 'crm' | 'inventory' | 'financial' | 'communi
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('workflow');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const mockParts = [
     { id: '1', name: 'Filtro de Óleo', sku: 'FO-1234', stock: 15 },
