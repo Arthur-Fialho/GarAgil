@@ -102,8 +102,16 @@ function App() {
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row font-sans text-gray-900">
       
       {/* Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10 md:min-h-screen">
-        <div className="p-6 border-b border-gray-100">
+      {isSidebarOpen && (
+      <aside className="w-full md:w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10 md:min-h-screen relative">
+        <button 
+          onClick={() => setIsSidebarOpen(false)} 
+          className="absolute top-6 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+          title="Recolher menu"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path></svg>
+        </button>
+        <div className="p-6 border-b border-gray-100 pr-12">
           <div className="flex items-center gap-3 text-primary">
             <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
               <path d="M22.7 14.3L21.7 15.3L19.7 13.3L20.7 12.3C20.8 12.2 20.9 12.1 21.1 12.1C21.2 12.1 21.4 12.2 21.5 12.3L22.8 13.6C22.9 13.8 22.9 14.1 22.7 14.3M13 19.9V22H15.1L21.2 15.9L19.2 13.9L13 19.9M11.6 15.6C10 16.3 8.3 16.5 6.7 16.2L11 11.9L9 9.9L4.7 14.2C4.1 12.3 4.4 10.3 5.4 8.7L2.4 5.7C2 5.3 2 4.7 2.4 4.3C2.8 3.9 3.4 3.9 3.8 4.3L6.8 7.3C9.3 5.3 12.9 5.2 15.6 6.8L12.5 9.9L14.6 11.9L17.7 8.8C18.6 10.7 18.3 12.8 17.1 14.4L18.6 15.9L20 14.5C20.6 13.1 20.8 11.5 20.3 10C20.2 9.5 20 9 19.7 8.6L22.3 6C22.7 5.6 22.7 5 22.3 4.6C21.9 4.2 21.3 4.2 20.9 4.6L18.2 7.2C17.4 6 16.2 5 14.8 4.4C12.4 3.4 9.6 3.6 7.4 5L4.4 2C4 1.6 3.4 1.6 3 2C2.6 2.4 2.6 3 3 3.4L6 6.4C4.3 8.8 4.2 12.1 5.6 14.6L2.6 17.6C2.2 18 2.2 18.6 2.6 19C3 19.4 3.6 19.4 4 19L7 16C8.8 17.1 10.8 17.3 12.8 16.8L11.6 15.6Z" />
