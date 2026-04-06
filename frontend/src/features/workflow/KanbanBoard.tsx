@@ -7,6 +7,7 @@ interface ServiceOrder {
   vehiclePlate: string;
   description: string;
   status: number;
+  isNfEmitted: boolean;
 }
 
 const COLUMNS = [
@@ -94,10 +95,18 @@ const KanbanBoard: React.FC = () => {
                     <div className="font-bold text-gray-900">{order.vehiclePlate}</div>
                     <div className="text-sm text-gray-600 mt-1">{order.description}</div>
                   </div>
-                  {order.status === 3 && (
+                  {order.status === 3 && !order.isNfEmitted && (
                     <button
-                      onClick={() => handleDrop({ preventDefault: () => {} } as any, 4, order.id)}
-                      className="mt-3 w-full px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700 transition-colors"
+                      onClick={() => handleEmitNf(order.id)}
+                      className="mt-3 w-full px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors shadow-sm"
+                    >
+                      Emitir NF
+                    </button>
+                  )}
+                  {order.status === 3 && order.isNfEmitted && (
+                    <button
+                      onClick={() => handleDrop(null, 4, order.id)}
+                      className="mt-3 w-full px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700 transition-colors shadow-sm"
                     >
                       Finalizar Serviço
                     </button>
