@@ -96,7 +96,7 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
         </div>
         
         <div className="pt-2 flex justify-end gap-2">
-          <Button type="button" onClick={() => setIsExpanded(false)} className="bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 focus:ring-gray-500">
+          <Button type="button" onClick={() => setIsExpanded(false)} variant="secondary">
             Cancelar
           </Button>
           <Button type="submit" disabled={isLoading}>
