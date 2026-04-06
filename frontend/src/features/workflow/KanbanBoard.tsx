@@ -5,16 +5,19 @@ import ServiceOrderForm from './ServiceOrderForm';
 interface ServiceOrder {
   id: string;
   vehiclePlate: string;
+  vehicleModel: string;
   description: string;
   status: number;
   isNfEmitted: boolean;
+  createdAt: string;
 }
 
 const COLUMNS = [
   { id: 0, title: 'Orçamento', bgColor: 'bg-gray-100' },
-  { id: 1, title: 'Aprovado', bgColor: 'bg-blue-50' },
-  { id: 2, title: 'Em Manutenção', bgColor: 'bg-yellow-50' },
-  { id: 3, title: 'Pronto', bgColor: 'bg-green-50' },
+  { id: 1, title: 'Orçamento Enviado', bgColor: 'bg-purple-50' },
+  { id: 2, title: 'Aprovado', bgColor: 'bg-blue-50' },
+  { id: 3, title: 'Em Manutenção', bgColor: 'bg-yellow-50' },
+  { id: 4, title: 'Pronto', bgColor: 'bg-green-50' },
 ];
 
 const KanbanBoard: React.FC = () => {
@@ -57,7 +60,7 @@ const KanbanBoard: React.FC = () => {
 
     try {
       await api.patch(`/serviceorders/${orderId}/status`, { status: targetStatusId });
-      if (targetStatusId === 4 || targetStatusId === 5) {
+      if (targetStatusId === 5 || targetStatusId === 6) {
         fetchOrders();
       }
     } catch (error) {
@@ -70,6 +73,7 @@ const KanbanBoard: React.FC = () => {
   const handleEmitNf = async (orderId: string) => {
     try {
       await api.post(`/serviceorders/${orderId}/emit-nf`);
+      // Update local state
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, isNfEmitted: true } : o));
     } catch (error) {
       console.error('Erro ao emitir NF', error);
@@ -80,7 +84,7 @@ const KanbanBoard: React.FC = () => {
   const handleCancel = async (orderId: string) => {
     if (window.confirm('Tem certeza que deseja cancelar esta ordem de serviço?')) {
       try {
-        await api.patch(`/serviceorders/${orderId}/status`, { status: 5 }); // 5 is Cancelado
+        await api.patch(`/serviceorders/${orderId}/status`, { status: 6 }); // 6 is Cancelado
         fetchOrders();
       } catch (error) {
         console.error('Erro ao cancelar ordem', error);
@@ -125,9 +129,13 @@ const KanbanBoard: React.FC = () => {
                   </button>
                   <div>
                     <div className="font-bold text-gray-900 pr-5">{order.vehiclePlate}</div>
+                    <div className="text-xs text-gray-500 font-medium">{order.vehicleModel}</div>
                     <div className="text-sm text-gray-600 mt-1">{order.description}</div>
+                    <div className="text-[10px] text-gray-400 mt-2">
+                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
+                    </div>
                   </div>
-                  {order.status === 3 && !order.isNfEmitted && (
+                  {order.status === 4 && !order.isNfEmitted && (
                     <button
                       onClick={() => handleEmitNf(order.id)}
                       className="mt-3 w-full px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors shadow-sm"
@@ -135,9 +143,9 @@ const KanbanBoard: React.FC = () => {
                       Emitir NF
                     </button>
                   )}
-                  {order.status === 3 && order.isNfEmitted && (
+                  {order.status === 4 && order.isNfEmitted && (
                     <button
-                      onClick={() => handleDrop(null, 4, order.id)}
+                      onClick={() => handleDrop(null, 5, order.id)}
                       className="mt-3 w-full px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700 transition-colors shadow-sm"
                     >
                       Finalizar Serviço

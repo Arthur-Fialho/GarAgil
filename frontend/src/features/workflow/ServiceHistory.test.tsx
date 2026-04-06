@@ -4,8 +4,8 @@ import { http, HttpResponse } from 'msw';
 import ServiceHistory from './ServiceHistory';
 
 const mockHistoryOrders = [
-  { id: '1', vehiclePlate: 'ABC-1234', description: 'Troca de Óleo', status: 4 }, // Finalizado
-  { id: '2', vehiclePlate: 'XYZ-9876', description: 'Revisão', status: 5 }, // Cancelado
+  { id: '1', vehiclePlate: 'ABC-1234', vehicleModel: 'Palio', description: 'Troca de Óleo', status: 5, createdAt: new Date().toISOString() }, // Finalizado
+  { id: '2', vehiclePlate: 'XYZ-9876', vehicleModel: 'Gol', description: 'Revisão', status: 6, createdAt: new Date().toISOString() }, // Cancelado
 ];
 
 const server = setupServer(
@@ -22,9 +22,10 @@ describe('ServiceHistory Component', () => {
   it('should render the table headers in pt-BR', async () => {
     render(<ServiceHistory />);
     
-    expect(await screen.findByText(/placa do veículo/i)).toBeInTheDocument();
-    expect(screen.getByText(/descrição do serviço/i)).toBeInTheDocument();
-    expect(screen.getByText(/status/i)).toBeInTheDocument();
+    expect(await screen.findByRole('columnheader', { name: /veículo/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /data/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /descrição do serviço/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /status/i })).toBeInTheDocument();
   });
 
   it('should load and display finalized and canceled service orders', async () => {

@@ -7,7 +7,7 @@ import ServiceOrderForm from './ServiceOrderForm';
 
 const server = setupServer(
   http.post('*/serviceorders', async ({ request }) => {
-    return HttpResponse.json({ id: '999', vehiclePlate: 'XYZ-1234', description: 'Revisão', status: 0 }, { status: 201 });
+    return HttpResponse.json({ id: '999', vehiclePlate: 'XYZ-1234', vehicleModel: 'Civic', description: 'Revisão', status: 0 }, { status: 201 });
   })
 );
 
@@ -28,12 +28,14 @@ describe('ServiceOrderForm Component', () => {
     await userEvent.click(screen.getByRole('button', { name: /nova ordem de serviço/i }));
 
     expect(screen.getByLabelText(/placa do veículo/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/modelo do veículo/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/descrição do serviço/i)).toBeInTheDocument();
 
     // Submit empty
     await userEvent.click(screen.getByRole('button', { name: /salvar ordem/i }));
 
     expect(await screen.findByText(/a placa do veículo é obrigatória/i)).toBeInTheDocument();
+    expect(await screen.findByText(/o modelo do veículo é obrigatório/i)).toBeInTheDocument();
     expect(await screen.findByText(/a descrição do serviço é obrigatória/i)).toBeInTheDocument();
   });
 
@@ -46,6 +48,7 @@ describe('ServiceOrderForm Component', () => {
 
     // Fill form
     await userEvent.type(screen.getByLabelText(/placa do veículo/i), 'XYZ-1234');
+    await userEvent.type(screen.getByLabelText(/modelo do veículo/i), 'Civic 2.0');
     await userEvent.type(screen.getByLabelText(/descrição do serviço/i), 'Revisão Geral');
 
     // Submit

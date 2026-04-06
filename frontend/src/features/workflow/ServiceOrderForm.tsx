@@ -8,26 +8,29 @@ interface ServiceOrderFormProps {
 
 const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
   const [vehiclePlate, setVehiclePlate] = useState('');
+  const [vehicleModel, setVehicleModel] = useState('');
   const [description, setDescription] = useState('');
-  const [errors, setErrors] = useState({ vehiclePlate: '', description: '' });
+  const [errors, setErrors] = useState({ vehiclePlate: '', vehicleModel: '', description: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors = { vehiclePlate: '', description: '' };
+    const newErrors = { vehiclePlate: '', vehicleModel: '', description: '' };
     if (!vehiclePlate) newErrors.vehiclePlate = 'A placa do veículo é obrigatória';
+    if (!vehicleModel) newErrors.vehicleModel = 'O modelo do veículo é obrigatório';
     if (!description) newErrors.description = 'A descrição do serviço é obrigatória';
     setErrors(newErrors);
 
-    if (newErrors.vehiclePlate || newErrors.description) {
+    if (newErrors.vehiclePlate || newErrors.vehicleModel || newErrors.description) {
       return;
     }
 
     try {
       setIsLoading(true);
-      await api.post('/serviceorders', { vehiclePlate, description });
+      await api.post('/serviceorders', { vehiclePlate, vehicleModel, description });
       setVehiclePlate('');
+      setVehicleModel('');
       setDescription('');
       setIsExpanded(false); // Close the form on success
       onSuccess(); // Refresh Kanban board
@@ -68,7 +71,7 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full md:w-1/3">
+          <div className="w-full md:w-1/4">
             <label htmlFor="vehiclePlate" className="block text-sm font-medium text-gray-700">Placa do Veículo</label>
             <input 
               id="vehiclePlate" 
@@ -81,7 +84,20 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
             {errors.vehiclePlate && <p className="mt-1 text-sm text-red-600">{errors.vehiclePlate}</p>}
           </div>
           
-          <div className="w-full md:w-2/3">
+          <div className="w-full md:w-1/4">
+            <label htmlFor="vehicleModel" className="block text-sm font-medium text-gray-700">Modelo do Veículo</label>
+            <input 
+              id="vehicleModel" 
+              value={vehicleModel} 
+              onChange={(e) => setVehicleModel(e.target.value)} 
+              disabled={isLoading}
+              placeholder="Ex: Honda Civic"
+              className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border ${errors.vehicleModel ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}`}
+            />
+            {errors.vehicleModel && <p className="mt-1 text-sm text-red-600">{errors.vehicleModel}</p>}
+          </div>
+          
+          <div className="w-full md:w-2/4">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700">Descrição do Serviço</label>
             <input 
               id="description" 
