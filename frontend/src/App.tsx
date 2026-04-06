@@ -81,19 +81,3 @@ function App() {
 }
 
 export default App;
-Name="text-lg leading-6 font-medium text-gray-900">4. Comunicação: Editor de Mensagem WhatsApp</h3>
-            </div>
-            <div className="px-4 py-5 sm:p-6">
-              <div className="max-w-xl">
-                <MessageTemplateEditor onSave={(template) => alert(`Modelo salvo: ${template}`)} />
-              </div>
-            </div>
-          </section>
-
-        </main>
-      </div>
-    </div>
-  );
-}
-
-export default App;
