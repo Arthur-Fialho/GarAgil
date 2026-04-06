@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import CustomerForm from './features/crm/CustomerForm';
 import KanbanBoard from './features/workflow/KanbanBoard';
+import ServiceHistory from './features/workflow/ServiceHistory';
 import InventoryDashboard from './features/inventory/InventoryDashboard';
 import TaxInvoiceButton from './features/financial/TaxInvoiceButton';
 import MessageTemplateEditor from './features/communication/MessageTemplateEditor';
 
-type Tab = 'workflow' | 'crm' | 'inventory' | 'financial' | 'communication';
+type Tab = 'workflow' | 'history' | 'crm' | 'inventory' | 'financial' | 'communication';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('workflow');
