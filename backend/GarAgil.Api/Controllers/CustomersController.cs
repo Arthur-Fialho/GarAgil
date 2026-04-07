@@ -27,6 +27,16 @@ public class CustomersController : ControllerBase
         return Ok(customers);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetCustomer(Guid id)
+    {
+        var customer = await _context.Customers.Include(c => c.Vehicles).FirstOrDefaultAsync(c => c.Id == id);
+        if (customer == null)
+            return NotFound();
+
+        return Ok(customer);
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateCustomer([FromBody] CreateCustomerRequest request)
     {
@@ -37,13 +47,13 @@ public class CustomersController : ControllerBase
 
         if (!string.IsNullOrEmpty(request.Cep))
         {
-            customer.UpdateAddress(request.Cep, request.Street, request.Number, request.Neighborhood, request.City, request.State);
+            customer.UpdateAddress(request.Cep, request.Street ?? "", request.Number ?? "", request.Neighborhood ?? "", request.City ?? "", request.State ?? "");
         }
 
         _context.Customers.Add(customer);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(CreateCustomer), new { id = customer.Id }, customer);
+        return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
     }
 
     [HttpPost("{id}/vehicles")]
