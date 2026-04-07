@@ -1,6 +1,7 @@
 using GarAgil.Domain.CRM;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace GarAgil.Infrastructure.Data;
@@ -56,32 +57,32 @@ public class BrasilApiGateway : IExternalDataGateway
             var response = await _httpClient.GetAsync($"cnpj/v1/{cleanCnpj}");
             if (!response.IsSuccessStatusCode) return null;
 
-            var result = await response.Content.ReadFromJsonAsync<BrasilApiCnpjResponse>();
+            var result = await response.Content.ReadFromJsonAsync<BrasilApiCnpjResponse>(new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (result == null) return null;
 
             return new CompanyDto
             {
-                Document = cnpj, // Keep original formatting or cleaned
+                Document = cnpj,
                 LegalName = result.RazaoSocial,
-                TradeName = result.NomeFantasia ?? result.RazaoSocial,
+                TradeName = !string.IsNullOrWhiteSpace(result.NomeFantasia) ? result.NomeFantasia : result.RazaoSocial,
                 Address = new AddressDto
                 {
                     Cep = result.Cep,
-                    Street = $"{result.Logradouro}, {result.Numero}",
+                    Street = string.IsNullOrWhiteSpace(result.Numero) ? result.Logradouro : $"{result.Logradouro}, {result.Numero}",
                     Neighborhood = result.Bairro,
                     City = result.Municipio,
                     State = result.Uf
                 }
             };
         }
-        catch
+        catch (System.Exception ex)
         {
+            System.Console.WriteLine("Error parsing CNPJ: " + ex.Message);
             return null;
         }
     }
 }
 
-// DTOs to match BrasilAPI JSON responses
 internal class BrasilApiCepResponse
 {
     public string Cep { get; set; } = string.Empty;
@@ -94,8 +95,13 @@ internal class BrasilApiCepResponse
 internal class BrasilApiCnpjResponse
 {
     public string Cnpj { get; set; } = string.Empty;
+    
+    [JsonPropertyName("razao_social")]
     public string RazaoSocial { get; set; } = string.Empty;
+    
+    [JsonPropertyName("nome_fantasia")]
     public string? NomeFantasia { get; set; }
+    
     public string Cep { get; set; } = string.Empty;
     public string Uf { get; set; } = string.Empty;
     public string Municipio { get; set; } = string.Empty;
