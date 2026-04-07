@@ -19,6 +19,9 @@ public class Customer
     public string? City { get; private set; }
     public string? State { get; private set; }
 
+    private readonly System.Collections.Generic.List<Vehicle> _vehicles = new();
+    public System.Collections.Generic.IReadOnlyCollection<Vehicle> Vehicles => _vehicles.AsReadOnly();
+
 #pragma warning disable CS8618
     private Customer() { }
 #pragma warning restore CS8618
@@ -36,6 +39,11 @@ public class Customer
         Document = document;
         Email = email;
         Phone = phone;
+    }
+
+    public void AddVehicle(string plate, string model)
+    {
+        _vehicles.Add(new Vehicle(plate, model));
     }
 
     public void UpdateAddress(string cep, string street, string number, string neighborhood, string city, string state)

@@ -14,6 +14,7 @@ public class GarAgilDbContext : DbContext
     public DbSet<ServiceOrder> ServiceOrders { get; set; } = null!;
     public DbSet<Part> Parts { get; set; } = null!;
     public DbSet<PayableAccount> PayableAccounts { get; set; } = null!;
+    public DbSet<Vehicle> Vehicles { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,6 +22,9 @@ public class GarAgilDbContext : DbContext
 
         // Simple mappings for Phase 1. 
         modelBuilder.Entity<Customer>().HasKey(c => c.Id);
+        modelBuilder.Entity<Customer>().HasMany(c => c.Vehicles).WithOne().HasForeignKey(v => v.CustomerId);
+        
+        modelBuilder.Entity<Vehicle>().HasKey(v => v.Id);
         modelBuilder.Entity<ServiceOrder>().HasKey(s => s.Id);
         modelBuilder.Entity<Part>().HasKey(p => p.Id);
         modelBuilder.Entity<PayableAccount>().HasKey(p => p.Id);

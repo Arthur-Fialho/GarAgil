@@ -2,6 +2,8 @@ using GarAgil.Domain.CRM;
 using GarAgil.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Threading.Tasks;
 
 namespace GarAgil.Api.Controllers;
@@ -16,6 +18,13 @@ public class CustomersController : ControllerBase
     public CustomersController(GarAgilDbContext context)
     {
         _context = context;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetCustomers()
+    {
+        var customers = await _context.Customers.Include(c => c.Vehicles).ToListAsync();
+        return Ok(customers);
     }
 
     [HttpPost]
@@ -36,6 +45,25 @@ public class CustomersController : ControllerBase
 
         return CreatedAtAction(nameof(CreateCustomer), new { id = customer.Id }, customer);
     }
+
+    [HttpPost("{id}/vehicles")]
+    public async Task<IActionResult> AddVehicle(Guid id, [FromBody] AddVehicleRequest request)
+    {
+        var customer = await _context.Customers.Include(c => c.Vehicles).FirstOrDefaultAsync(c => c.Id == id);
+        if (customer == null)
+            return NotFound();
+
+        customer.AddVehicle(request.Plate, request.Model);
+        await _context.SaveChangesAsync();
+
+        return Ok(customer);
+    }
+}
+
+public class AddVehicleRequest
+{
+    public string Plate { get; set; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
 }
 
 public class CreateCustomerRequest
