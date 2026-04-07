@@ -5,8 +5,10 @@ import api from '../../services/api';
 const CustomerForm: React.FC = () => {
   const [name, setName] = useState('');
   const [document, setDocument] = useState('');
+  const [phone, setPhone] = useState('');
   const [cep, setCep] = useState('');
   const [street, setStreet] = useState('');
+  const [number, setNumber] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -28,6 +30,7 @@ const CustomerForm: React.FC = () => {
       setNeighborhood(data.neighborhood || '');
       setCity(data.city || '');
       setState(data.state || '');
+      document.getElementById('number')?.focus();
     } catch (err) {
       console.error('Erro ao buscar CEP', err);
     } finally {
@@ -48,6 +51,7 @@ const CustomerForm: React.FC = () => {
       if (data.address) {
         setCep(data.address.cep || '');
         setStreet(data.address.street || '');
+        setNumber(data.address.number || '');
         setNeighborhood(data.address.neighborhood || '');
         setCity(data.address.city || '');
         setState(data.address.state || '');
@@ -85,12 +89,14 @@ const CustomerForm: React.FC = () => {
 
     try {
       setIsLoading(true);
-      await api.post('/customers', { name, document, email: '', phone: '', cep, street, neighborhood, city, state });
+      await api.post('/customers', { name, document, email: '', phone, cep, street, number, neighborhood, city, state });
       setSuccessMsg('Cliente cadastrado com sucesso!');
       setName('');
       setDocument('');
+      setPhone('');
       setCep('');
       setStreet('');
+      setNumber('');
       setNeighborhood('');
       setCity('');
       setState('');
@@ -115,7 +121,7 @@ const CustomerForm: React.FC = () => {
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label htmlFor="document" className="block text-sm font-medium text-gray-700">CPF ou CNPJ</label>
           <input 
@@ -140,9 +146,21 @@ const CustomerForm: React.FC = () => {
           />
           {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
         </div>
+
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Telefone / Contato</label>
+          <input 
+            id="phone" 
+            value={phone} 
+            onChange={(e) => setPhone(e.target.value)} 
+            disabled={isLoading}
+            placeholder="(00) 00000-0000"
+            className="mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label htmlFor="cep" className="block text-sm font-medium text-gray-700">CEP</label>
           <input 
@@ -160,6 +178,16 @@ const CustomerForm: React.FC = () => {
             id="street" 
             value={street} 
             onChange={(e) => setStreet(e.target.value)} 
+            disabled={isLoading}
+            className="mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border"
+          />
+        </div>
+        <div>
+          <label htmlFor="number" className="block text-sm font-medium text-gray-700">Número</label>
+          <input 
+            id="number" 
+            value={number} 
+            onChange={(e) => setNumber(e.target.value)} 
             disabled={isLoading}
             className="mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border"
           />

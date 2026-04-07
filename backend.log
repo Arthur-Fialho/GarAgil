@@ -1,0 +1,35 @@
+Building...
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5251
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/arthur-fialho/Documents/programacao/projects/GarAgil/backend/GarAgil.Api
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]
+      Failed to determine the https port for redirect.
+info: System.Net.Http.HttpClient.IExternalDataGateway.LogicalHandler[100]
+      Start processing HTTP request GET https://brasilapi.com.br/api/cnpj/v1/39516359000151
+info: System.Net.Http.HttpClient.IExternalDataGateway.ClientHandler[100]
+      Sending HTTP request GET https://brasilapi.com.br/api/cnpj/v1/39516359000151
+info: System.Net.Http.HttpClient.IExternalDataGateway.ClientHandler[101]
+      Received HTTP response headers after 344.1376ms - 200
+info: System.Net.Http.HttpClient.IExternalDataGateway.LogicalHandler[101]
+      End processing HTTP request after 356.6279ms - 200
+info: System.Net.Http.HttpClient.IExternalDataGateway.LogicalHandler[100]
+      Start processing HTTP request GET https://brasilapi.com.br/api/cnpj/v1/39516359000151
+info: System.Net.Http.HttpClient.IExternalDataGateway.ClientHandler[100]
+      Sending HTTP request GET https://brasilapi.com.br/api/cnpj/v1/39516359000151
+info: System.Net.Http.HttpClient.IExternalDataGateway.ClientHandler[101]
+      Received HTTP response headers after 100.802ms - 429
+info: System.Net.Http.HttpClient.IExternalDataGateway.LogicalHandler[101]
+      End processing HTTP request after 100.9683ms - 429
+info: System.Net.Http.HttpClient.IExternalDataGateway.LogicalHandler[100]
+      Start processing HTTP request GET https://brasilapi.com.br/api/cnpj/v1/39516359000151
+info: System.Net.Http.HttpClient.IExternalDataGateway.ClientHandler[100]
+      Sending HTTP request GET https://brasilapi.com.br/api/cnpj/v1/39516359000151
+info: System.Net.Http.HttpClient.IExternalDataGateway.ClientHandler[101]
+      Received HTTP response headers after 34.5487ms - 429
+info: System.Net.Http.HttpClient.IExternalDataGateway.LogicalHandler[101]
+      End processing HTTP request after 34.7106ms - 429

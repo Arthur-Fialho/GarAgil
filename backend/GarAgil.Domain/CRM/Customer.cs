@@ -14,6 +14,7 @@ public class Customer
     // Endereço (via ViaCEP)
     public string? Cep { get; private set; }
     public string? Street { get; private set; }
+    public string? Number { get; private set; }
     public string? Neighborhood { get; private set; }
     public string? City { get; private set; }
     public string? State { get; private set; }
@@ -37,10 +38,11 @@ public class Customer
         Phone = phone;
     }
 
-    public void UpdateAddress(string cep, string street, string neighborhood, string city, string state)
+    public void UpdateAddress(string cep, string street, string number, string neighborhood, string city, string state)
     {
         Cep = cep;
         Street = street;
+        Number = number;
         Neighborhood = neighborhood;
         City = city;
         State = state;

@@ -39,6 +39,7 @@ public class BrasilApiGateway : IExternalDataGateway
             {
                 Cep = result.Cep,
                 Street = result.Street,
+                Number = string.Empty, // ViaCEP doesn't return Number
                 Neighborhood = result.Neighborhood,
                 City = result.City,
                 State = result.State
@@ -76,7 +77,8 @@ public class BrasilApiGateway : IExternalDataGateway
                 Address = new AddressDto
                 {
                     Cep = result.Cep,
-                    Street = string.IsNullOrWhiteSpace(result.Numero) ? result.Logradouro : $"{result.Logradouro}, {result.Numero}",
+                    Street = result.Logradouro,
+                    Number = result.Numero,
                     Neighborhood = result.Bairro,
                     City = result.Municipio,
                     State = result.Uf
@@ -85,8 +87,7 @@ public class BrasilApiGateway : IExternalDataGateway
         }
         catch (System.Exception ex)
         {
-            System.Console.WriteLine("Error parsing CNPJ: " + ex.Message);
-            return null;
+            throw new System.Exception("Error parsing CNPJ: " + ex.Message, ex);
         }
     }
 }
