@@ -1,3 +1,4 @@
+// Force Vite HMR Cache Invalidation
 import React, { type ButtonHTMLAttributes } from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
