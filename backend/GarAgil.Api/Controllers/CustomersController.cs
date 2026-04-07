@@ -26,6 +26,11 @@ public class CustomersController : ControllerBase
 
         var customer = new Customer(request.Name, request.Document, request.Email, request.Phone);
 
+        if (!string.IsNullOrEmpty(request.Cep))
+        {
+            customer.UpdateAddress(request.Cep, request.Street, request.Neighborhood, request.City, request.State);
+        }
+
         _context.Customers.Add(customer);
         await _context.SaveChangesAsync();
 
@@ -39,4 +44,9 @@ public class CreateCustomerRequest
     public string Document { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
+    public string Cep { get; set; } = string.Empty;
+    public string Street { get; set; } = string.Empty;
+    public string Neighborhood { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string State { get; set; } = string.Empty;
 }

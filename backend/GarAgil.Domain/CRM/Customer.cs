@@ -10,6 +10,13 @@ public class Customer
     public string Document { get; private set; }
     public string Email { get; private set; }
     public string Phone { get; private set; }
+    
+    // Endereço (via ViaCEP)
+    public string? Cep { get; private set; }
+    public string? Street { get; private set; }
+    public string? Neighborhood { get; private set; }
+    public string? City { get; private set; }
+    public string? State { get; private set; }
 
 #pragma warning disable CS8618
     private Customer() { }
@@ -28,6 +35,15 @@ public class Customer
         Document = document;
         Email = email;
         Phone = phone;
+    }
+
+    public void UpdateAddress(string cep, string street, string neighborhood, string city, string state)
+    {
+        Cep = cep;
+        Street = street;
+        Neighborhood = neighborhood;
+        City = city;
+        State = state;
     }
 
     private bool IsValidDocument(string document)
