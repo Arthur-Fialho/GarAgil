@@ -26,6 +26,10 @@ public class BrasilApiGateway : IExternalDataGateway
         try
         {
             var response = await _httpClient.GetAsync($"cep/v1/{cleanCep}");
+            
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                throw new System.Exception("Rate limit exceeded on BrasilAPI (429 Too Many Requests). Por favor, aguarde um minuto e tente novamente.");
+
             if (!response.IsSuccessStatusCode) return null;
 
             var result = await response.Content.ReadFromJsonAsync<BrasilApiCepResponse>();
