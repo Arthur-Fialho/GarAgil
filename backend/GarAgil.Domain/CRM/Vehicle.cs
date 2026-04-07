@@ -25,4 +25,16 @@ public class Vehicle
         Plate = plate.ToUpper();
         Model = model;
     }
+
+    public void Update(string plate, string model)
+    {
+        if (string.IsNullOrWhiteSpace(plate))
+            throw new ArgumentException("Placa do veículo é obrigatória.");
+        
+        if (string.IsNullOrWhiteSpace(model))
+            throw new ArgumentException("Modelo do veículo é obrigatório.");
+
+        Plate = plate.ToUpper();
+        Model = model;
+    }
 }

@@ -56,6 +56,29 @@ public class Customer
         State = state;
     }
 
+    public void UpdateDetails(string name, string document, string email, string phone)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Nome é obrigatório.");
+            
+        if (!IsValidDocument(document))
+            throw new ArgumentException("Documento (CPF/CNPJ) inválido.");
+
+        Name = name;
+        Document = document;
+        Email = email;
+        Phone = phone;
+    }
+
+    public void RemoveVehicle(Guid vehicleId)
+    {
+        var vehicle = _vehicles.Find(v => v.Id == vehicleId);
+        if (vehicle != null)
+        {
+            _vehicles.Remove(vehicle);
+        }
+    }
+
     private bool IsValidDocument(string document)
     {
         // Simple regex stub for pt-BR CPF/CNPJ validation to satisfy the current tests
