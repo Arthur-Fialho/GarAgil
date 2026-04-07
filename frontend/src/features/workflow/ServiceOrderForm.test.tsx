@@ -6,7 +6,7 @@ import { vi } from 'vitest';
 import ServiceOrderForm from './ServiceOrderForm';
 
 const server = setupServer(
-  http.post('*/serviceorders', async ({ request }) => {
+  http.post('*/serviceorders', async () => {
     return HttpResponse.json({ id: '999', vehiclePlate: 'XYZ-1234', vehicleModel: 'Civic', description: 'Revisão', status: 0 }, { status: 201 });
   })
 );

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
@@ -6,7 +6,7 @@ import CustomerForm from './CustomerForm';
 
 // Mock the API endpoint
 const server = setupServer(
-  http.post('*/customers', async ({ request }) => {
+  http.post('*/customers', async () => {
     return HttpResponse.json({ id: '123', name: 'Maria Silva' }, { status: 201 });
   })
 );

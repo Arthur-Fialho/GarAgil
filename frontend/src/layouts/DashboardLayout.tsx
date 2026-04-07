@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import CustomerForm from '../features/crm/CustomerForm';
 import KanbanBoard from '../features/workflow/KanbanBoard';
 import ServiceHistory from '../features/workflow/ServiceHistory';
