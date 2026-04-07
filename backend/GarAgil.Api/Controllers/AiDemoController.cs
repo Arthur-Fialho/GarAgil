@@ -1,10 +1,12 @@
 using GarAgil.Application.Workflow;
 using GarAgil.Application.CRM;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 namespace GarAgil.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/ai")]
 public class AiDemoController : ControllerBase

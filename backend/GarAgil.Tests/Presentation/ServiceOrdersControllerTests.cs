@@ -12,6 +12,10 @@ using System.Linq;
 
 using Microsoft.EntityFrameworkCore;
 
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
+
 namespace GarAgil.Tests.Presentation;
 
 public class ServiceOrdersControllerTests : IClassFixture<WebApplicationFactory<Program>>
@@ -33,6 +37,17 @@ public class ServiceOrdersControllerTests : IClassFixture<WebApplicationFactory<
                 services.AddDbContext<GarAgilDbContext>(options =>
                 {
                     options.UseInMemoryDatabase("GarAgil_ApiTestDb_ServiceOrders");
+                });
+
+                services.AddAuthentication(TestAuthHandler.DefaultScheme)
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.DefaultScheme, options => { });
+                
+                services.AddControllers(options =>
+                {
+                    var policy = new AuthorizationPolicyBuilder(TestAuthHandler.DefaultScheme)
+                        .RequireAuthenticatedUser()
+                        .Build();
+                    options.Filters.Add(new AuthorizeFilter(policy));
                 });
             });
         });

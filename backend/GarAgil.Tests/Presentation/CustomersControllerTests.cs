@@ -9,6 +9,10 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Xunit;
 
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
+
 namespace GarAgil.Tests.Presentation;
 
 public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Program>>
@@ -30,6 +34,17 @@ public class CustomersControllerTests : IClassFixture<WebApplicationFactory<Prog
                 services.AddDbContext<GarAgilDbContext>(options =>
                 {
                     options.UseInMemoryDatabase("GarAgil_ApiTestDb");
+                });
+
+                services.AddAuthentication(TestAuthHandler.DefaultScheme)
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.DefaultScheme, options => { });
+                
+                services.AddControllers(options =>
+                {
+                    var policy = new AuthorizationPolicyBuilder(TestAuthHandler.DefaultScheme)
+                        .RequireAuthenticatedUser()
+                        .Build();
+                    options.Filters.Add(new AuthorizeFilter(policy));
                 });
             });
         });
