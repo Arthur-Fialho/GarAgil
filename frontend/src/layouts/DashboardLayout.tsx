@@ -216,4 +216,4 @@ function DashboardLayout() {
   );
 }
 
-export default App;
+export default DashboardLayout;
