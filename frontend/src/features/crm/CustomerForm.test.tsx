@@ -8,6 +8,9 @@ import CustomerForm from './CustomerForm';
 const server = setupServer(
   http.post('*/customers', async () => {
     return HttpResponse.json({ id: '123', name: 'Maria Silva' }, { status: 201 });
+  }),
+  http.post('*/customers/:id/vehicles', async () => {
+    return HttpResponse.json({ id: '456', plate: 'XYZ-1234', model: 'Honda Civic' }, { status: 201 });
   })
 );
 
@@ -34,7 +37,7 @@ describe('CustomerForm Component', () => {
     expect(await screen.findByText(/documento inválido/i)).toBeInTheDocument();
   });
 
-  it('should call the API and show a success message when submitting valid data', async () => {
+  it('should call the API, show success message, and allow adding a vehicle', async () => {
     render(<CustomerForm />);
 
     await userEvent.type(screen.getByLabelText(/nome completo/i), 'Maria Silva');
@@ -44,6 +47,18 @@ describe('CustomerForm Component', () => {
     await userEvent.click(submitButton);
 
     // Assert that success message is shown
-    expect(await screen.findByText(/cliente cadastrado com sucesso/i)).toBeInTheDocument();
+    expect(await screen.findByText(/cliente cadastrado com sucesso! agora você pode vincular veículos/i)).toBeInTheDocument();
+
+    // Now the vehicle form should be visible
+    expect(screen.getByLabelText(/placa do veículo/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/modelo/i)).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText(/placa do veículo/i), 'XYZ-1234');
+    await userEvent.type(screen.getByLabelText(/modelo/i), 'Honda Civic');
+    
+    const addVehicleButton = screen.getByRole('button', { name: /adicionar veículo/i });
+    await userEvent.click(addVehicleButton);
+
+    expect(await screen.findByText(/veículo vinculado com sucesso!/i)).toBeInTheDocument();
   });
 });
