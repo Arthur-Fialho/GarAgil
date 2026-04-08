@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace GarAgil.Domain.Workflow;
 
@@ -28,11 +29,14 @@ public class ServiceOrder
         if (string.IsNullOrWhiteSpace(vehiclePlate))
             throw new ArgumentException("Placa do veículo é obrigatória.");
 
+        if (!Regex.IsMatch(vehiclePlate.ToUpper(), @"(^[A-Z]{3}[0-9]{4}$)|(^[A-Z]{3}[0-9][A-Z][0-9]{2}$)" ))
+            throw new ArgumentException("Placa do veículo inválida. Use o formato AAA1234 ou AAA1A23.");
+
         if (string.IsNullOrWhiteSpace(vehicleModel))
             throw new ArgumentException("Modelo do veículo é obrigatório.");
 
         Id = Guid.NewGuid();
-        VehiclePlate = vehiclePlate;
+        VehiclePlate = vehiclePlate.ToUpper();
         VehicleModel = vehicleModel;
         Description = description;
         Status = ServiceOrderStatus.Orcamento;

@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 
 namespace GarAgil.Domain.CRM;
 
@@ -18,6 +19,9 @@ public class Vehicle
         if (string.IsNullOrWhiteSpace(plate))
             throw new ArgumentException("Placa do veículo é obrigatória.");
         
+        if (!IsValidPlate(plate))
+            throw new ArgumentException("Placa do veículo inválida. Use o formato AAA1234 ou AAA1A23.");
+        
         if (string.IsNullOrWhiteSpace(model))
             throw new ArgumentException("Modelo do veículo é obrigatório.");
 
@@ -31,11 +35,20 @@ public class Vehicle
     {
         if (string.IsNullOrWhiteSpace(plate))
             throw new ArgumentException("Placa do veículo é obrigatória.");
-        
+
+        if (!IsValidPlate(plate))
+            throw new ArgumentException("Placa do veículo inválida. Use o formato AAA1234 ou AAA1A23.");
+
         if (string.IsNullOrWhiteSpace(model))
             throw new ArgumentException("Modelo do veículo é obrigatório.");
 
         Plate = plate.ToUpper();
         Model = model;
+    }
+
+    private bool IsValidPlate(string plate)
+    {
+        // RegEx for Old Brazilian (AAA1234) or Mercosul (AAA1A23)
+        return Regex.IsMatch(plate.ToUpper(), @"(^[A-Z]{3}[0-9]{4}$)|(^[A-Z]{3}[0-9][A-Z][0-9]{2}$)");
     }
 }

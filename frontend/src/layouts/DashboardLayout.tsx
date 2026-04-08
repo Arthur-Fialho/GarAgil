@@ -66,7 +66,7 @@ function DashboardLayout() {
         );
       case 'crm':
         return (
-          <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden max-w-4xl">
+          <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-100 bg-white">
               <h3 className="text-xl font-semibold text-gray-800">CRM: Novo Cliente</h3>
               <p className="text-sm text-gray-500 mt-1">Cadastre novos clientes e seus veículos na oficina.</p>
@@ -102,7 +102,7 @@ function DashboardLayout() {
         );
       case 'financial':
         return (
-          <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden max-w-2xl">
+          <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-100 bg-white">
               <h3 className="text-xl font-semibold text-gray-800">Financeiro: Emissão Fiscal</h3>
               <p className="text-sm text-gray-500 mt-1">Emita notas fiscais de produto (NF-e) ou serviço (NFS-e) rapidamente.</p>
@@ -115,7 +115,7 @@ function DashboardLayout() {
         );
       case 'communication':
         return (
-          <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden max-w-2xl">
+          <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-100 bg-white">
               <h3 className="text-xl font-semibold text-gray-800">Comunicação: Mensagens WhatsApp</h3>
               <p className="text-sm text-gray-500 mt-1">Configure modelos de mensagem para a IA enviar aos clientes.</p>
@@ -235,7 +235,7 @@ function DashboardLayout() {
 
         {/* Dynamic View */}
         <div className="flex-1 overflow-auto p-4 md:p-8">
-          <div className="max-w-7xl mx-auto h-full">
+          <div className="w-full h-full">
             {renderContent()}
           </div>
         </div>

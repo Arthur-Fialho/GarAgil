@@ -217,7 +217,7 @@ const KanbanBoard: React.FC = () => {
                   </div>
 
                   <div>
-                    <div className="font-bold text-gray-900 pr-12">{order.vehiclePlate}</div>
+                    <div className="font-bold text-gray-900 pr-12 uppercase tracking-wider">{order.vehiclePlate}</div>
                     <div className="text-xs text-gray-500 font-medium">{order.vehicleModel}</div>
                     
                     <div className="mt-3 space-y-2">

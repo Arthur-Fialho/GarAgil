@@ -107,9 +107,19 @@ const CustomerForm: React.FC = () => {
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!vehiclePlate || !vehicleModel || !createdCustomerId) return;
+
+    const plateRegex = /^[A-Z]{3}[0-9]{1}[A-Z0-9]{1}[0-9]{2}$/;
+    const oldPlateRegex = /^[A-Z]{3}[0-9]{4}$/;
+    const cleanPlate = vehiclePlate.replace(/-/g, '').toUpperCase();
+
+    if (!plateRegex.test(cleanPlate) && !oldPlateRegex.test(cleanPlate)) {
+      alert('Placa inválida. Use o formato AAA1234 ou AAA1A23.');
+      return;
+    }
+
     try {
       setIsLoading(true);
-      await api.post(`/customers/${createdCustomerId}/vehicles`, { plate: vehiclePlate, model: vehicleModel });
+      await api.post(`/customers/${createdCustomerId}/vehicles`, { plate: cleanPlate, model: vehicleModel });
       setSuccessMsg('Veículo vinculado com sucesso!');
       setVehiclePlate('');
       setVehicleModel('');

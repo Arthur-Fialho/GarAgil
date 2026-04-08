@@ -34,7 +34,17 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
     }
 
     const newErrors = { vehiclePlate: '', vehicleModel: '', description: '' };
-    if (!vehiclePlate) newErrors.vehiclePlate = 'A placa do veículo é obrigatória';
+    if (!vehiclePlate) {
+      newErrors.vehiclePlate = 'A placa do veículo é obrigatória';
+    } else {
+      const plateRegex = /^[A-Z]{3}[0-9]{1}[A-Z0-9]{1}[0-9]{2}$/;
+      const oldPlateRegex = /^[A-Z]{3}[0-9]{4}$/;
+      const cleanPlate = vehiclePlate.replace(/-/g, '').toUpperCase();
+      if (!plateRegex.test(cleanPlate) && !oldPlateRegex.test(cleanPlate)) {
+        newErrors.vehiclePlate = 'Placa inválida (AAA1234 ou AAA1A23)';
+      }
+    }
+
     if (!vehicleModel) newErrors.vehicleModel = 'O modelo do veículo é obrigatório';
     if (finalDescriptions.length === 0) newErrors.description = 'Adicione ao menos um serviço';
     setErrors(newErrors);
@@ -45,8 +55,9 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
 
     try {
       setIsLoading(true);
+      const cleanPlate = vehiclePlate.replace(/-/g, '').toUpperCase();
       await api.post('/serviceorders', { 
-        vehiclePlate, 
+        vehiclePlate: cleanPlate, 
         vehicleModel, 
         descriptions: finalDescriptions 
       });

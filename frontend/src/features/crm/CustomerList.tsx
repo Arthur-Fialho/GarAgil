@@ -89,8 +89,18 @@ const CustomerList: React.FC = () => {
   const handleUpdateVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingVehicle) return;
+
+    const plateRegex = /^[A-Z]{3}[0-9]{1}[A-Z0-9]{1}[0-9]{2}$/;
+    const oldPlateRegex = /^[A-Z]{3}[0-9]{4}$/;
+    const cleanPlate = editingVehicle.vehicle.plate.replace(/-/g, '').toUpperCase();
+
+    if (!plateRegex.test(cleanPlate) && !oldPlateRegex.test(cleanPlate)) {
+      alert('Placa inválida. Use o formato AAA1234 ou AAA1A23.');
+      return;
+    }
+
     try {
-      await api.put(`/customers/${editingVehicle.customerId}/vehicles/${editingVehicle.vehicle.id}`, editingVehicle.vehicle);
+      await api.put(`/customers/${editingVehicle.customerId}/vehicles/${editingVehicle.vehicle.id}`, { ...editingVehicle.vehicle, plate: cleanPlate });
       setEditingVehicle(null);
       fetchCustomers();
     } catch (error) {
@@ -101,8 +111,18 @@ const CustomerList: React.FC = () => {
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addVehicleTo || !newVehicle.plate || !newVehicle.model) return;
+
+    const plateRegex = /^[A-Z]{3}[0-9]{1}[A-Z0-9]{1}[0-9]{2}$/;
+    const oldPlateRegex = /^[A-Z]{3}[0-9]{4}$/;
+    const cleanPlate = newVehicle.plate.replace(/-/g, '').toUpperCase();
+
+    if (!plateRegex.test(cleanPlate) && !oldPlateRegex.test(cleanPlate)) {
+      alert('Placa inválida. Use o formato AAA1234 ou AAA1A23.');
+      return;
+    }
+
     try {
-      await api.post(`/customers/${addVehicleTo.id}/vehicles`, newVehicle);
+      await api.post(`/customers/${addVehicleTo.id}/vehicles`, { ...newVehicle, plate: cleanPlate });
       setAddVehicleTo(null);
       setNewVehicle({ plate: '', model: '' });
       fetchCustomers();
