@@ -6,7 +6,7 @@ import CustomerList from '../features/crm/CustomerList';
 import KanbanBoard from '../features/workflow/KanbanBoard';
 import ServiceHistory from '../features/workflow/ServiceHistory';
 import InventoryDashboard from '../features/inventory/InventoryDashboard';
-import TaxInvoiceButton from '../features/financial/TaxInvoiceButton';
+import FinancialDashboard from '../features/financial/FinancialDashboard';
 import MessageTemplateEditor from '../features/communication/MessageTemplateEditor';
 
 type Tab = 'workflow' | 'history' | 'crm' | 'customer-list' | 'inventory' | 'financial' | 'communication';
@@ -15,7 +15,7 @@ function DashboardLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('workflow');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default closed on mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
 
   const handleLogout = () => {
     logout();
@@ -28,7 +28,7 @@ function DashboardLayout() {
     { id: 'crm', label: 'Novo Cliente (CRM)', icon: 'M12 4v16m8-8H4', role: 'Admin' },
     { id: 'customer-list', label: 'Clientes Cadastrados', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', role: 'Admin' },
     { id: 'inventory', label: 'Estoque de Peças', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', role: 'Admin' },
-    { id: 'financial', label: 'Financeiro & Notas', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', role: 'Admin' },
+    { id: 'financial', label: 'Financeiro (Contas)', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', role: 'Admin' },
     { id: 'communication', label: 'Comunicação', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', role: 'Admin' },
   ].filter(item => !item.role || item.role === user?.role);
 
@@ -43,7 +43,7 @@ function DashboardLayout() {
       case 'workflow':
         return (
           <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden flex flex-col h-full">
-            <div className="px-6 py-5 border-b border-gray-100 bg-white">
+            <div className="px-6 py-5 border-b border-gray-100 bg-white shrink-0">
               <h3 className="text-xl font-semibold text-gray-800">Workflow: Kanban de Serviços</h3>
               <p className="text-sm text-gray-500 mt-1">Gerencie as ordens de serviço através das colunas.</p>
             </div>
@@ -55,7 +55,7 @@ function DashboardLayout() {
       case 'history':
         return (
           <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden flex flex-col h-full">
-            <div className="px-6 py-5 border-b border-gray-100 bg-white">
+            <div className="px-6 py-5 border-b border-gray-100 bg-white shrink-0">
               <h3 className="text-xl font-semibold text-gray-800">Serviços Finalizados</h3>
               <p className="text-sm text-gray-500 mt-1">Histórico completo de veículos.</p>
             </div>
@@ -102,14 +102,13 @@ function DashboardLayout() {
         );
       case 'financial':
         return (
-          <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-100 bg-white">
-              <h3 className="text-xl font-semibold text-gray-800">Financeiro: Emissão Fiscal</h3>
-              <p className="text-sm text-gray-500 mt-1">Emita notas fiscais rapidamente.</p>
+          <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden flex flex-col h-full">
+            <div className="px-6 py-5 border-b border-gray-100 bg-white shrink-0">
+              <h3 className="text-xl font-semibold text-gray-800">Financeiro: Fluxo de Caixa</h3>
+              <p className="text-sm text-gray-500 mt-1">Gestão de contas a pagar, receber e saldo real.</p>
             </div>
-            <div className="p-4 sm:p-6 flex flex-col sm:flex-row gap-4">
-              <TaxInvoiceButton type="product" onIssue={() => alert('Emitindo NF-e (Produto)...')} />
-              <TaxInvoiceButton type="service" onIssue={() => alert('Emitindo NFS-e (Serviço)...')} />
+            <div className="p-4 sm:p-8 bg-gray-50/50 flex-grow overflow-auto">
+              <FinancialDashboard />
             </div>
           </div>
         );

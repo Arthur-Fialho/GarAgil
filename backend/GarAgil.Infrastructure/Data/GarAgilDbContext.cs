@@ -14,6 +14,7 @@ public class GarAgilDbContext : DbContext
     public DbSet<ServiceOrder> ServiceOrders { get; set; } = null!;
     public DbSet<Part> Parts { get; set; } = null!;
     public DbSet<PayableAccount> PayableAccounts { get; set; } = null!;
+    public DbSet<ReceivableAccount> ReceivableAccounts { get; set; } = null!;
     public DbSet<Vehicle> Vehicles { get; set; } = null!;
     public DbSet<ServiceOrderTask> ServiceOrderTasks { get; set; } = null!;
 
@@ -48,5 +49,6 @@ public class GarAgilDbContext : DbContext
         
         modelBuilder.Entity<Part>().HasKey(p => p.Id);
         modelBuilder.Entity<PayableAccount>().HasKey(p => p.Id);
+        modelBuilder.Entity<ReceivableAccount>().HasKey(r => r.Id);
     }
 }
