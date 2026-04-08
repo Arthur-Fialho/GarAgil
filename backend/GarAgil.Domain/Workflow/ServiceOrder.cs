@@ -89,8 +89,8 @@ public class ServiceOrder
 
         MechanicNotes = notes;
         NeedsAdditionalRepair = true;
-        // Move back to estimate sent to notify admin
-        Status = ServiceOrderStatus.OrcamentoEnviado;
+        // Move back to initial estimate stage
+        Status = ServiceOrderStatus.Orcamento;
     }
 
     public void FinalizeOrder()

@@ -110,4 +110,21 @@ public class ServiceOrderTests
         // Assert
         act.Should().Throw<InvalidOperationException>().WithMessage("Ordens finalizadas não podem ser canceladas.");
     }
+
+    [Fact]
+    public void RequestAdditionalRepair_WhenCalled_ShouldChangeToOrcamento()
+    {
+        // Arrange
+        var serviceOrder = new ServiceOrder("XYZ-9876", "Gol 1.0", "Revisão geral");
+        serviceOrder.Approve();
+        serviceOrder.StartMaintenance();
+
+        // Act
+        serviceOrder.RequestAdditionalRepair("Novo problema no motor");
+
+        // Assert
+        serviceOrder.Status.Should().Be(ServiceOrderStatus.Orcamento);
+        serviceOrder.NeedsAdditionalRepair.Should().BeTrue();
+        serviceOrder.MechanicNotes.Should().Be("Novo problema no motor");
+    }
 }

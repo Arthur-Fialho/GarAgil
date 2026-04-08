@@ -198,8 +198,8 @@ const KanbanBoard: React.FC = () => {
                     </button>
                   )}
 
-                  {/* MECHANIC ACTIONS */}
-                  {user?.role === 'Mechanic' && order.status === 3 && (
+                  {/* MECHANIC ACTIONS (Now available for Admin too) */}
+                  {(user?.role === 'Mechanic' || user?.role === 'Admin') && order.status === 3 && (
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <button
                         onClick={() => setMechanicModal({ isOpen: true, orderId: order.id, type: 'finish' })}
