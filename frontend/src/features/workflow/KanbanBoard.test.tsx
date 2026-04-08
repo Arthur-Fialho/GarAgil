@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import KanbanBoard from './KanbanBoard';
+import { AuthProvider } from '../../contexts/AuthContext';
 
 const mockOrders = [
   { id: '1', vehiclePlate: 'ABC-1234', vehicleModel: 'Onix', description: 'Troca de Óleo', status: 0, isNfEmitted: false, createdAt: new Date().toISOString() }, // Orçamento
@@ -32,7 +33,11 @@ afterAll(() => server.close());
 
 describe('KanbanBoard Component', () => {
   it('should render the 5 columns in pt-BR', async () => {
-    render(<KanbanBoard />);
+    render(
+      <AuthProvider>
+        <KanbanBoard />
+      </AuthProvider>
+    );
     
     expect(await screen.findByText('Orçamento')).toBeInTheDocument();
     expect(screen.getByText('Orçamento Enviado')).toBeInTheDocument();
@@ -42,7 +47,11 @@ describe('KanbanBoard Component', () => {
   });
 
   it('should load and display service orders', async () => {
-    render(<KanbanBoard />);
+    render(
+      <AuthProvider>
+        <KanbanBoard />
+      </AuthProvider>
+    );
     
     // Check if the mock orders are displayed
     expect(await screen.findByText('ABC-1234')).toBeInTheDocument();

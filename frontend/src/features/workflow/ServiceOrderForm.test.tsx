@@ -4,6 +4,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { vi } from 'vitest';
 import ServiceOrderForm from './ServiceOrderForm';
+import { AuthProvider } from '../../contexts/AuthContext';
 
 const server = setupServer(
   http.post('*/serviceorders', async () => {
@@ -17,12 +18,20 @@ afterAll(() => server.close());
 
 describe('ServiceOrderForm Component', () => {
   it('should render the toggle button initially', () => {
-    render(<ServiceOrderForm onSuccess={vi.fn()} />);
+    render(
+      <AuthProvider>
+        <ServiceOrderForm onSuccess={vi.fn()} />
+      </AuthProvider>
+    );
     expect(screen.getByRole('button', { name: /nova ordem de serviço/i })).toBeInTheDocument();
   });
 
   it('should expand form and validate empty inputs in pt-BR', async () => {
-    render(<ServiceOrderForm onSuccess={vi.fn()} />);
+    render(
+      <AuthProvider>
+        <ServiceOrderForm onSuccess={vi.fn()} />
+      </AuthProvider>
+    );
     
     // Expand form
     await userEvent.click(screen.getByRole('button', { name: /nova ordem de serviço/i }));
@@ -41,7 +50,11 @@ describe('ServiceOrderForm Component', () => {
 
   it('should submit successfully and call onSuccess', async () => {
     const onSuccessMock = vi.fn();
-    render(<ServiceOrderForm onSuccess={onSuccessMock} />);
+    render(
+      <AuthProvider>
+        <ServiceOrderForm onSuccess={onSuccessMock} />
+      </AuthProvider>
+    );
 
     // Expand
     await userEvent.click(screen.getByRole('button', { name: /nova ordem de serviço/i }));

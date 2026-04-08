@@ -22,20 +22,31 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Email e senha são obrigatórios." });
         }
 
-        if (request.Email != "admin@garagil.com" || request.Password != "admin123")
+        if (request.Email == "admin@garagil.com" && request.Password == "admin123")
         {
-            return Unauthorized(new { message = "Credenciais inválidas." });
+            return GenerateToken(request.Email, "Admin Oficina", "Admin");
         }
 
+        if (request.Email == "mecanico@garagil.com" && request.Password == "mecanico123")
+        {
+            return GenerateToken(request.Email, "Mecânico Silva", "Mechanic");
+        }
+
+        return Unauthorized(new { message = "Credenciais inválidas." });
+    }
+
+    private IActionResult GenerateToken(string email, string name, string role)
+    {
         var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? "fallback_secret_key_for_development_purposes_only";
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, "1"),
-            new Claim(ClaimTypes.Email, request.Email),
-            new Claim(ClaimTypes.Name, "Admin Oficina")
+            new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.Email, email),
+            new Claim(ClaimTypes.Name, name),
+            new Claim(ClaimTypes.Role, role)
         };
 
         var token = new JwtSecurityToken(
@@ -48,7 +59,7 @@ public class AuthController : ControllerBase
 
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return Ok(new { Token = tokenString, User = new { Name = "Admin Oficina", Email = request.Email } });
+        return Ok(new { Token = tokenString, User = new { Name = name, Email = email, Role = role } });
     }
 }
 

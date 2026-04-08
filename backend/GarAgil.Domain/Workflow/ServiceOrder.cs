@@ -11,6 +11,8 @@ public class ServiceOrder
     public ServiceOrderStatus Status { get; private set; }
     public bool IsNfEmitted { get; private set; }
     public DateTime CreatedAt { get; private set; }
+    public string? MechanicNotes { get; private set; }
+    public bool NeedsAdditionalRepair { get; private set; }
 
 #pragma warning disable CS8618
     private ServiceOrder() { }
@@ -73,6 +75,24 @@ public class ServiceOrder
         Status = ServiceOrderStatus.Pronto;
     }
 
+    public void FinishMaintenance(string notes)
+    {
+        FinishMaintenance();
+        MechanicNotes = notes;
+        NeedsAdditionalRepair = false;
+    }
+
+    public void RequestAdditionalRepair(string notes)
+    {
+        if (Status != ServiceOrderStatus.EmManutencao)
+            throw new InvalidOperationException("Apenas ordens em manutenção podem solicitar reparos adicionais.");
+
+        MechanicNotes = notes;
+        NeedsAdditionalRepair = true;
+        // Move back to estimate sent to notify admin
+        Status = ServiceOrderStatus.OrcamentoEnviado;
+    }
+
     public void FinalizeOrder()
     {
         if (Status != ServiceOrderStatus.Pronto)
@@ -91,9 +111,6 @@ public class ServiceOrder
 
     public void UpdateStatus(ServiceOrderStatus newStatus)
     {
-        // Simple generic update for Kanban drag-and-drop.
-        // In a real scenario, we might want to check strict paths, 
-        // but Kanban often allows moving cards freely (e.g., reverting to Aprovado).
         Status = newStatus;
     }
 }

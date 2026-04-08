@@ -91,6 +91,49 @@ public class ServiceOrdersController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    [HttpPost("{id}/finish-maintenance")]
+    public async Task<IActionResult> FinishMaintenance(Guid id, [FromBody] MechanicActionRequest request)
+    {
+        var order = await _context.ServiceOrders.FindAsync(id);
+        if (order == null)
+            return NotFound();
+
+        try
+        {
+            order.FinishMaintenance(request.Notes);
+            await _context.SaveChangesAsync();
+            return Ok(order);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("{id}/additional-repair")]
+    public async Task<IActionResult> AdditionalRepair(Guid id, [FromBody] MechanicActionRequest request)
+    {
+        var order = await _context.ServiceOrders.FindAsync(id);
+        if (order == null)
+            return NotFound();
+
+        try
+        {
+            order.RequestAdditionalRepair(request.Notes);
+            await _context.SaveChangesAsync();
+            return Ok(order);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+}
+
+public class MechanicActionRequest
+{
+    public string Notes { get; set; } = string.Empty;
 }
 
 public class CreateServiceOrderRequest

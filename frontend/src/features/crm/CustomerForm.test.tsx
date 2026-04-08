@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import CustomerForm from './CustomerForm';
+import { AuthProvider } from '../../contexts/AuthContext';
 
 // Mock the API endpoint
 const server = setupServer(
@@ -20,7 +21,11 @@ afterAll(() => server.close());
 
 describe('CustomerForm Component', () => {
   it('should render the form with pt-BR labels', () => {
-    render(<CustomerForm />);
+    render(
+      <AuthProvider>
+        <CustomerForm />
+      </AuthProvider>
+    );
     
     expect(screen.getByLabelText(/nome completo/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/cpf ou cnpj/i)).toBeInTheDocument();
@@ -28,7 +33,11 @@ describe('CustomerForm Component', () => {
   });
 
   it('should show required field validation messages in pt-BR when submitting empty', async () => {
-    render(<CustomerForm />);
+    render(
+      <AuthProvider>
+        <CustomerForm />
+      </AuthProvider>
+    );
     
     const submitButton = screen.getByRole('button', { name: /cadastrar cliente/i });
     await userEvent.click(submitButton);
@@ -38,7 +47,11 @@ describe('CustomerForm Component', () => {
   });
 
   it('should call the API, show success message, and allow adding a vehicle', async () => {
-    render(<CustomerForm />);
+    render(
+      <AuthProvider>
+        <CustomerForm />
+      </AuthProvider>
+    );
 
     await userEvent.type(screen.getByLabelText(/nome completo/i), 'Maria Silva');
     await userEvent.type(screen.getByLabelText(/cpf ou cnpj/i), '123.456.789-00');
