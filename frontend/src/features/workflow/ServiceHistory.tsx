@@ -51,7 +51,7 @@ const ServiceHistory: React.FC = () => {
   });
 
   if (loading) {
-    return <div className="text-center py-4 text-gray-500">Carregando histórico...</div>;
+    return <div className="text-center py-4 text-gray-500 font-medium">Carregando histórico...</div>;
   }
 
   return (
@@ -102,7 +102,7 @@ const ServiceHistory: React.FC = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredOrders.map((order) => (
               <tr key={order.id} className="hover:bg-gray-50 transition-colors align-top">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
                   {order.createdAt ? new Date(order.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -113,10 +113,18 @@ const ServiceHistory: React.FC = () => {
                   <ul className="space-y-1">
                     {order.tasks?.map(task => (
                       <li key={task.id} className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className={task.isCompleted ? 'text-gray-400 line-through' : ''}>
+                        {task.isCompleted ? (
+                          <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <div className="w-4 h-4 mt-0.5 shrink-0 flex items-center justify-center">
+                            <span className="relative flex h-2 w-2">
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-400"></span>
+                            </span>
+                          </div>
+                        )}
+                        <span className={task.isCompleted ? 'text-gray-400 line-through' : 'text-gray-700 font-medium'}>
                           {task.description}
                         </span>
                       </li>
@@ -132,7 +140,7 @@ const ServiceHistory: React.FC = () => {
             ))}
             {filteredOrders.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-500 italic">
+                <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-500 italic font-medium">
                   Nenhum registro encontrado.
                 </td>
               </tr>

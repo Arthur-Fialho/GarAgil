@@ -43,6 +43,14 @@ public class ServiceOrder
         _tasks.Add(new ServiceOrderTask(description, Id, isCompleted: false));
     }
 
+    public void AddTask(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+            throw new ArgumentException("A descrição da tarefa é obrigatória.");
+            
+        _tasks.Add(new ServiceOrderTask(description, Id, isCompleted: false));
+    }
+
     public void EmitNf()
     {
         if (Status != ServiceOrderStatus.Pronto)

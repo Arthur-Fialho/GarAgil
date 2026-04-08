@@ -8,6 +8,7 @@ public class ServiceOrderTask
     public string Description { get; private set; }
     public bool IsCompleted { get; private set; }
     public Guid ServiceOrderId { get; private set; }
+    public DateTime CreatedAt { get; private set; }
 
 #pragma warning disable CS8618
     private ServiceOrderTask() { }
@@ -22,6 +23,7 @@ public class ServiceOrderTask
         Description = description;
         ServiceOrderId = serviceOrderId;
         IsCompleted = isCompleted;
+        CreatedAt = DateTime.UtcNow;
     }
 
     public void MarkAsCompleted()

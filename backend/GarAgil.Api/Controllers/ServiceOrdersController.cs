@@ -1,6 +1,5 @@
 using GarAgil.Domain.Workflow;
 using GarAgil.Infrastructure.Data;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,7 +8,6 @@ using System.Linq;
 
 namespace GarAgil.Api.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class ServiceOrdersController : ControllerBase
@@ -25,7 +23,44 @@ public class ServiceOrdersController : ControllerBase
     public async Task<IActionResult> GetServiceOrders()
     {
         var orders = await _context.ServiceOrders.Include(o => o.Tasks).ToListAsync();
+        
+        // Fetch all historical completed tasks for these vehicles to show persistence on cards
+        var plates = orders.Select(o => o.VehiclePlate).Distinct().ToList();
+        var allPastTasks = await _context.ServiceOrderTasks
+            .Where(t => t.IsCompleted && _context.ServiceOrders
+                .Where(so => plates.Contains(so.VehiclePlate))
+                .Select(so => so.Id).Contains(t.ServiceOrderId))
+            .ToListAsync();
+
+        foreach (var order in orders)
+        {
+            // Get completed tasks from other OS of the same plate
+            var historicalTasks = allPastTasks
+                .Where(t => t.ServiceOrderId != order.Id && 
+                           _context.ServiceOrders.Any(so => so.Id == t.ServiceOrderId && so.VehiclePlate == order.VehiclePlate))
+                .ToList();
+
+            // We combine them for the UI display (using a simple logic for the prototype)
+            // In a real app we might want a separate 'History' property in the DTO
+            var currentTasks = order.Tasks.ToList();
+            var combined = historicalTasks.Concat(currentTasks).OrderBy(t => t.CreatedAt).ToList();
+            
+            // Temporary hack: use reflection to update the private backing field for the prototype display
+            var field = typeof(ServiceOrder).GetField("_tasks", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            field?.SetValue(order, combined);
+        }
+
         return Ok(orders);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetCustomer(Guid id)
+    {
+        var customer = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
+        if (customer == null)
+            return NotFound();
+
+        return Ok(customer);
     }
 
     [HttpPost]
@@ -34,12 +69,37 @@ public class ServiceOrdersController : ControllerBase
         if (request == null || string.IsNullOrWhiteSpace(request.VehiclePlate) || string.IsNullOrWhiteSpace(request.VehicleModel))
             return BadRequest();
 
-        var order = new ServiceOrder(request.VehiclePlate, request.VehicleModel, request.Description);
+        // Handle both old 'Description' field and new 'Descriptions' list for backward compatibility
+        var initialTasks = request.Descriptions != null && request.Descriptions.Any() 
+            ? request.Descriptions 
+            : new List<string> { request.Description };
+
+        // Create OS with the FIRST description
+        var order = new ServiceOrder(request.VehiclePlate, request.VehicleModel, initialTasks.First());
+
+        // Add the REST of the descriptions as tasks using the official domain method
+        foreach (var desc in initialTasks.Skip(1))
+        {
+            order.AddTask(desc);
+        }
 
         _context.ServiceOrders.Add(order);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetServiceOrders), new { id = order.Id }, order);
+        return CreatedAtAction(nameof(GetCustomer), new { id = order.Id }, order);
+    }
+
+    [HttpPost("{id}/tasks")]
+    public async Task<IActionResult> AddTask(Guid id, [FromBody] AddTaskRequest request)
+    {
+        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
+        if (order == null) return NotFound();
+
+        var newTask = new ServiceOrderTask(request.Description, id);
+        _context.ServiceOrderTasks.Add(newTask);
+        
+        await _context.SaveChangesAsync();
+        return Ok(order);
     }
 
     [HttpPatch("{id}/status")]
@@ -67,9 +127,9 @@ public class ServiceOrdersController : ControllerBase
             await _context.SaveChangesAsync();
             return Ok(order);
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message, detail = ex.InnerException?.Message });
         }
     }
 
@@ -86,9 +146,9 @@ public class ServiceOrdersController : ControllerBase
             await _context.SaveChangesAsync();
             return Ok(order);
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message, detail = ex.InnerException?.Message });
         }
     }
 
@@ -105,9 +165,9 @@ public class ServiceOrdersController : ControllerBase
             await _context.SaveChangesAsync();
             return Ok(order);
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message, detail = ex.InnerException?.Message });
         }
     }
 
@@ -120,21 +180,22 @@ public class ServiceOrdersController : ControllerBase
 
         try
         {
-            // 1. Finalize the current order (Technical finalization)
-            order.RequestAdditionalRepair(request.Notes);
-            order.EmitNf(); // Auto-emit for internal transition
-            order.FinalizeOrder();
+            if (request.FinishCurrent)
+            {
+                order.FinishMaintenance("Serviço concluído. Novo reparo solicitado: " + request.Notes);
+                order.EmitNf(); 
+                order.FinalizeOrder();
+            }
 
-            // 2. Create the NEW order for the same vehicle (The follow-up)
             var newOrder = new ServiceOrder(order.VehiclePlate, order.VehicleModel, request.Notes);
             _context.ServiceOrders.Add(newOrder);
 
             await _context.SaveChangesAsync();
             return Ok(newOrder);
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message, detail = ex.InnerException?.Message });
         }
     }
 
@@ -149,8 +210,6 @@ public class ServiceOrdersController : ControllerBase
 
         if (task.IsCompleted)
         {
-            // Simple hack to toggle for the prototype since property is private set
-            // In a real app we'd have a method in the entity
             typeof(ServiceOrderTask).GetProperty("IsCompleted")?.SetValue(task, false);
         }
         else
@@ -163,19 +222,26 @@ public class ServiceOrdersController : ControllerBase
     }
 }
 
-public class MechanicActionRequest
-{
-    public string Notes { get; set; } = string.Empty;
-}
-
 public class CreateServiceOrderRequest
 {
     public string VehiclePlate { get; set; } = string.Empty;
     public string VehicleModel { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public List<string>? Descriptions { get; set; }
+}
+
+public class AddTaskRequest
+{
     public string Description { get; set; } = string.Empty;
 }
 
 public class UpdateStatusRequest
 {
     public int Status { get; set; }
+}
+
+public class MechanicActionRequest
+{
+    public string Notes { get; set; } = string.Empty;
+    public bool FinishCurrent { get; set; }
 }

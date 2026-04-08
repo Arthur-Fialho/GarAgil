@@ -15,6 +15,7 @@ public class GarAgilDbContext : DbContext
     public DbSet<Part> Parts { get; set; } = null!;
     public DbSet<PayableAccount> PayableAccounts { get; set; } = null!;
     public DbSet<Vehicle> Vehicles { get; set; } = null!;
+    public DbSet<ServiceOrderTask> ServiceOrderTasks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
