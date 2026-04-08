@@ -56,3 +56,5 @@ nunit-*.xml
 
 .ai-jail
 .env
+*.log
+.token
