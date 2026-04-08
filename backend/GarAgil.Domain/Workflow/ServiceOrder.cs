@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GarAgil.Domain.Workflow;
 
@@ -13,6 +15,9 @@ public class ServiceOrder
     public DateTime CreatedAt { get; private set; }
     public string? MechanicNotes { get; private set; }
     public bool NeedsAdditionalRepair { get; private set; }
+
+    private readonly List<ServiceOrderTask> _tasks = new();
+    public IReadOnlyCollection<ServiceOrderTask> Tasks => _tasks.AsReadOnly();
 
 #pragma warning disable CS8618
     private ServiceOrder() { }
@@ -33,6 +38,9 @@ public class ServiceOrder
         Status = ServiceOrderStatus.Orcamento;
         IsNfEmitted = false;
         CreatedAt = DateTime.UtcNow;
+
+        // The initial description is the first task
+        _tasks.Add(new ServiceOrderTask(description, Id, isCompleted: false));
     }
 
     public void EmitNf()
@@ -72,6 +80,12 @@ public class ServiceOrder
         if (Status != ServiceOrderStatus.EmManutencao)
             throw new InvalidOperationException("Apenas ordens em manutenção podem ser finalizadas.");
             
+        // Mark all current pending tasks as completed
+        foreach (var task in _tasks.Where(t => !t.IsCompleted))
+        {
+            task.MarkAsCompleted();
+        }
+
         Status = ServiceOrderStatus.Pronto;
     }
 
@@ -87,10 +101,14 @@ public class ServiceOrder
         if (Status != ServiceOrderStatus.EmManutencao)
             throw new InvalidOperationException("Apenas ordens em manutenção podem solicitar reparos adicionais.");
 
+        // Mark current tasks as completed before closing this OS to open a new one
+        foreach (var task in _tasks.Where(t => !t.IsCompleted))
+        {
+            task.MarkAsCompleted();
+        }
+
         MechanicNotes = notes;
         NeedsAdditionalRepair = true;
-        // Move back to initial estimate stage
-        Status = ServiceOrderStatus.Orcamento;
     }
 
     public void FinalizeOrder()
@@ -98,6 +116,9 @@ public class ServiceOrder
         if (Status != ServiceOrderStatus.Pronto)
             throw new InvalidOperationException("Apenas ordens prontas podem ser entregues/finalizadas.");
             
+        if (!IsNfEmitted)
+            throw new InvalidOperationException("Não é possível finalizar sem antes emitir a Nota Fiscal.");
+
         Status = ServiceOrderStatus.Finalizado;
     }
 

@@ -4,6 +4,12 @@ import ServiceOrderForm from './ServiceOrderForm';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../../components/Button';
 
+interface ServiceOrderTask {
+  id: string;
+  description: string;
+  isCompleted: boolean;
+}
+
 interface ServiceOrder {
   id: string;
   vehiclePlate: string;
@@ -13,6 +19,7 @@ interface ServiceOrder {
   isNfEmitted: boolean;
   createdAt: string;
   mechanicNotes?: string;
+  tasks: ServiceOrderTask[];
 }
 
 const COLUMNS = [
@@ -108,6 +115,15 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
+  const handleToggleTask = async (orderId: string, taskId: string) => {
+    try {
+      await api.patch(`/serviceorders/${orderId}/tasks/${taskId}/toggle`);
+      fetchOrders();
+    } catch (error) {
+      console.error('Erro ao alternar status da tarefa', error);
+    }
+  };
+
   const executeMechanicAction = async () => {
     if (!mechanicNotes.trim()) {
       alert('Por favor, adicione um comentário.');
@@ -169,7 +185,31 @@ const KanbanBoard: React.FC = () => {
                   <div>
                     <div className="font-bold text-gray-900 pr-5">{order.vehiclePlate}</div>
                     <div className="text-xs text-gray-500 font-medium">{order.vehicleModel}</div>
-                    <div className="text-sm text-gray-600 mt-1 line-clamp-2">{order.description}</div>
+                    
+                    {/* Tasks List */}
+                    <div className="mt-3 space-y-2">
+                      {order.tasks?.map(task => (
+                        <div key={task.id} className="flex items-start gap-2 group/task">
+                          <button 
+                            onClick={() => handleToggleTask(order.id, task.id)}
+                            className={`w-4 h-4 mt-0.5 shrink-0 rounded border flex items-center justify-center transition-colors ${task.isCompleted ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-primary'}`}
+                          >
+                            {task.isCompleted ? (
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>
+                            ) : (
+                              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse group-hover/task:bg-primary"></div>
+                            )}
+                          </button>
+                          <span 
+                            onClick={() => handleToggleTask(order.id, task.id)}
+                            className={`text-xs cursor-pointer select-none ${task.isCompleted ? 'text-gray-400 line-through' : 'text-gray-700 font-medium'}`}
+                          >
+                            {task.description}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
                     {order.mechanicNotes && (
                       <div className="mt-2 p-2 bg-blue-50 rounded text-[10px] text-blue-800 italic border border-blue-100">
                         Obs: {order.mechanicNotes}

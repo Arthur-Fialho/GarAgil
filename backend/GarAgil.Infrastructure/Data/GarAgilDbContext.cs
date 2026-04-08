@@ -33,7 +33,18 @@ public class GarAgilDbContext : DbContext
             .HasForeignKey(v => v.CustomerId);
         
         modelBuilder.Entity<Vehicle>().HasKey(v => v.Id);
+        
         modelBuilder.Entity<ServiceOrder>().HasKey(s => s.Id);
+        var taskNavigation = modelBuilder.Entity<ServiceOrder>().Metadata.FindNavigation(nameof(ServiceOrder.Tasks));
+        taskNavigation?.SetPropertyAccessMode(PropertyAccessMode.Field);
+        
+        modelBuilder.Entity<ServiceOrder>()
+            .HasMany(c => c.Tasks)
+            .WithOne()
+            .HasForeignKey(v => v.ServiceOrderId);
+
+        modelBuilder.Entity<ServiceOrderTask>().HasKey(t => t.Id);
+        
         modelBuilder.Entity<Part>().HasKey(p => p.Id);
         modelBuilder.Entity<PayableAccount>().HasKey(p => p.Id);
     }

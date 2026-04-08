@@ -24,7 +24,7 @@ public class ServiceOrdersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetServiceOrders()
     {
-        var orders = await _context.ServiceOrders.ToListAsync();
+        var orders = await _context.ServiceOrders.Include(o => o.Tasks).ToListAsync();
         return Ok(orders);
     }
 
@@ -45,7 +45,7 @@ public class ServiceOrdersController : ControllerBase
     [HttpPatch("{id}/status")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request)
     {
-        var order = await _context.ServiceOrders.FindAsync(id);
+        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
         if (order == null)
             return NotFound();
 
@@ -76,7 +76,7 @@ public class ServiceOrdersController : ControllerBase
     [HttpPost("{id}/emit-nf")]
     public async Task<IActionResult> EmitNf(Guid id)
     {
-        var order = await _context.ServiceOrders.FindAsync(id);
+        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
         if (order == null)
             return NotFound();
 
@@ -95,7 +95,7 @@ public class ServiceOrdersController : ControllerBase
     [HttpPost("{id}/finish-maintenance")]
     public async Task<IActionResult> FinishMaintenance(Guid id, [FromBody] MechanicActionRequest request)
     {
-        var order = await _context.ServiceOrders.FindAsync(id);
+        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
         if (order == null)
             return NotFound();
 
@@ -114,20 +114,52 @@ public class ServiceOrdersController : ControllerBase
     [HttpPost("{id}/additional-repair")]
     public async Task<IActionResult> AdditionalRepair(Guid id, [FromBody] MechanicActionRequest request)
     {
-        var order = await _context.ServiceOrders.FindAsync(id);
+        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
         if (order == null)
             return NotFound();
 
         try
         {
+            // 1. Finalize the current order (Technical finalization)
             order.RequestAdditionalRepair(request.Notes);
+            order.EmitNf(); // Auto-emit for internal transition
+            order.FinalizeOrder();
+
+            // 2. Create the NEW order for the same vehicle (The follow-up)
+            var newOrder = new ServiceOrder(order.VehiclePlate, order.VehicleModel, request.Notes);
+            _context.ServiceOrders.Add(newOrder);
+
             await _context.SaveChangesAsync();
-            return Ok(order);
+            return Ok(newOrder);
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(ex.Message);
         }
+    }
+
+    [HttpPatch("{id}/tasks/{taskId}/toggle")]
+    public async Task<IActionResult> ToggleTask(Guid id, Guid taskId)
+    {
+        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
+        if (order == null) return NotFound();
+
+        var task = order.Tasks.FirstOrDefault(t => t.Id == taskId);
+        if (task == null) return NotFound();
+
+        if (task.IsCompleted)
+        {
+            // Simple hack to toggle for the prototype since property is private set
+            // In a real app we'd have a method in the entity
+            typeof(ServiceOrderTask).GetProperty("IsCompleted")?.SetValue(task, false);
+        }
+        else
+        {
+            task.MarkAsCompleted();
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok(order);
     }
 }
 

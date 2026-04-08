@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 
+interface ServiceOrderTask {
+  id: string;
+  description: string;
+  isCompleted: boolean;
+}
+
 interface ServiceOrder {
   id: string;
   vehiclePlate: string;
@@ -8,6 +14,7 @@ interface ServiceOrder {
   description: string;
   status: number;
   createdAt: string;
+  tasks: ServiceOrderTask[];
 }
 
 const ServiceHistory: React.FC = () => {
@@ -44,7 +51,7 @@ const ServiceHistory: React.FC = () => {
   });
 
   if (loading) {
-    return <div className="text-center py-4">Carregando histórico...</div>;
+    return <div className="text-center py-4 text-gray-500">Carregando histórico...</div>;
   }
 
   return (
@@ -85,7 +92,7 @@ const ServiceHistory: React.FC = () => {
                 Veículo
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Descrição do Serviço
+                Serviços Executados
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -94,7 +101,7 @@ const ServiceHistory: React.FC = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredOrders.map((order) => (
-              <tr key={order.id} className="hover:bg-gray-50">
+              <tr key={order.id} className="hover:bg-gray-50 transition-colors align-top">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {order.createdAt ? new Date(order.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
                 </td>
@@ -102,8 +109,19 @@ const ServiceHistory: React.FC = () => {
                   <div className="font-bold">{order.vehiclePlate}</div>
                   <div className="text-xs text-gray-500">{order.vehicleModel}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {order.description}
+                <td className="px-6 py-4 text-sm text-gray-500">
+                  <ul className="space-y-1">
+                    {order.tasks?.map(task => (
+                      <li key={task.id} className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className={task.isCompleted ? 'text-gray-400 line-through' : ''}>
+                          {task.description}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${order.status === 5 ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800'}`}>
@@ -114,7 +132,7 @@ const ServiceHistory: React.FC = () => {
             ))}
             {filteredOrders.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-500 italic">
                   Nenhum registro encontrado.
                 </td>
               </tr>
