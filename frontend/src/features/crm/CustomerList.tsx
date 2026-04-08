@@ -26,9 +26,15 @@ interface Customer {
 const CustomerList: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modals state
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<{customerId: string, vehicle: Vehicle} | null>(null);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null); // ID of customer being deleted
+  const [addVehicleTo, setAddVehicleTo] = useState<Customer | null>(null);
+  
+  // New Vehicle form state
+  const [newVehicle, setNewVehicle] = useState({ plate: '', model: '' });
 
   useEffect(() => {
     fetchCustomers();
@@ -61,7 +67,7 @@ const CustomerList: React.FC = () => {
     if (window.confirm('Tem certeza que deseja remover este veículo?')) {
       try {
         await api.delete(`/customers/${customerId}/vehicles/${vehicleId}`);
-        fetchCustomers(); // Refresh to get updated list
+        fetchCustomers();
       } catch (error) {
         console.error('Erro ao remover veículo', error);
       }
@@ -71,7 +77,6 @@ const CustomerList: React.FC = () => {
   const handleUpdateCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCustomer) return;
-
     try {
       await api.put(`/customers/${editingCustomer.id}`, editingCustomer);
       setEditingCustomer(null);
@@ -84,7 +89,6 @@ const CustomerList: React.FC = () => {
   const handleUpdateVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingVehicle) return;
-
     try {
       await api.put(`/customers/${editingVehicle.customerId}/vehicles/${editingVehicle.vehicle.id}`, editingVehicle.vehicle);
       setEditingVehicle(null);
@@ -94,76 +98,97 @@ const CustomerList: React.FC = () => {
     }
   };
 
+  const handleAddVehicle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addVehicleTo || !newVehicle.plate || !newVehicle.model) return;
+    try {
+      await api.post(`/customers/${addVehicleTo.id}/vehicles`, newVehicle);
+      setAddVehicleTo(null);
+      setNewVehicle({ plate: '', model: '' });
+      fetchCustomers();
+    } catch (error) {
+      console.error('Erro ao vincular veículo', error);
+    }
+  };
+
+  const filteredCustomers = customers.filter(c => 
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    c.document.includes(searchTerm)
+  );
+
   if (loading) {
-    return <div className="text-center py-4 text-gray-500">Carregando clientes...</div>;
+    return <div className="text-center py-4 text-gray-500 font-medium italic">Carregando lista de clientes...</div>;
   }
 
   return (
     <div className="space-y-6">
+      {/* Search Header */}
+      <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar por nome ou CPF/CNPJ..."
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition-all"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="text-xs text-gray-500 font-medium bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+          Total: <span className="text-primary font-bold">{filteredCustomers.length}</span> clientes encontrados
+        </div>
+      </div>
+
       <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contato</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Veículos</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Cliente</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Documento</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Contato</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Frota</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Gerenciar</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {customers.map((customer) => (
+            {filteredCustomers.map((customer) => (
               <React.Fragment key={customer.id}>
-                <tr className="hover:bg-gray-50 transition-colors">
+                <tr className="hover:bg-blue-50/30 transition-colors group">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-gray-900">{customer.name}</div>
-                    <div className="text-xs text-gray-500">{customer.street}, {customer.number} - {customer.city}/{customer.state}</div>
+                    <div className="text-sm font-bold text-gray-900 group-hover:text-primary transition-colors">{customer.name}</div>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-tighter mt-0.5">{customer.city}/{customer.state} • {customer.neighborhood}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.document}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.phone}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">
-                      {customer.vehicles.length} {customer.vehicles.length === 1 ? 'veículo' : 'veículos'}
-                    </span>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">{customer.document}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{customer.phone}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button 
+                      onClick={() => setAddVehicleTo(customer)}
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 rounded-md text-[10px] font-bold border border-green-100 hover:bg-green-100 transition-all"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg>
+                      {customer.vehicles.length === 0 ? 'ADICIONAR CARRO' : `${customer.vehicles.length} VEÍCULOS`}
+                    </button>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                    <button 
-                      onClick={() => setEditingCustomer(customer)}
-                      className="text-primary hover:text-primary-hover"
-                    >
-                      Editar
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteCustomer(customer.id)}
-                      className="text-danger hover:text-danger-hover"
-                    >
-                      Excluir
-                    </button>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                    <button onClick={() => setEditingCustomer(customer)} className="text-primary hover:underline">Editar</button>
+                    <button onClick={() => handleDeleteCustomer(customer.id)} className="text-red-400 hover:text-red-600">Excluir</button>
                   </td>
                 </tr>
                 {customer.vehicles.length > 0 && (
-                  <tr className="bg-gray-50/30">
+                  <tr className="bg-gray-50/40">
                     <td colSpan={5} className="px-12 py-3">
-                      <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-wrap gap-2">
                         {customer.vehicles.map(v => (
-                          <div key={v.id} className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm group">
+                          <div key={v.id} className="flex items-center gap-2 bg-white border border-gray-200 rounded-md px-2.5 py-1.5 shadow-sm group/car">
                             <div className="flex flex-col">
-                              <span className="text-xs font-bold text-gray-900">{v.plate}</span>
-                              <span className="text-[10px] text-gray-500">{v.model}</span>
+                              <span className="text-[11px] font-black text-gray-800 tracking-tight">{v.plate}</span>
+                              <span className="text-[9px] text-gray-400 uppercase leading-none">{v.model}</span>
                             </div>
-                            <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button 
-                                onClick={() => setEditingVehicle({customerId: customer.id, vehicle: v})}
-                                className="p-1 text-gray-400 hover:text-primary"
-                              >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                              </button>
-                              <button 
-                                onClick={() => handleRemoveVehicle(customer.id, v.id)}
-                                className="p-1 text-gray-400 hover:text-danger"
-                              >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                              </button>
+                            <div className="flex gap-1 ml-2 opacity-0 group-hover/car:opacity-100 transition-opacity">
+                              <button onClick={() => setEditingVehicle({customerId: customer.id, vehicle: v})} className="p-1 text-gray-300 hover:text-primary"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                              <button onClick={() => handleRemoveVehicle(customer.id, v.id)} className="p-1 text-gray-300 hover:text-red-500"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
                             </div>
                           </div>
                         ))}
@@ -173,10 +198,13 @@ const CustomerList: React.FC = () => {
                 )}
               </React.Fragment>
             ))}
-            {customers.length === 0 && (
+            {filteredCustomers.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500 italic">
-                  Nenhum cliente cadastrado ainda.
+                <td colSpan={5} className="px-6 py-12 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    <p className="text-gray-400 text-sm font-medium italic">Nenhum cliente corresponde à sua busca.</p>
+                  </div>
                 </td>
               </tr>
             )}
@@ -184,12 +212,56 @@ const CustomerList: React.FC = () => {
         </table>
       </div>
 
-      {/* Edit Customer Modal */}
+      {/* MODAL: ADD VEHICLE */}
+      {addVehicleTo && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-sm overflow-hidden animate-in zoom-in duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 bg-green-50 flex justify-between items-center">
+              <div className="flex flex-col">
+                <h3 className="text-sm font-black text-gray-900 uppercase">Vincular Veículo</h3>
+                <span className="text-[10px] text-green-700 font-bold uppercase tracking-widest">{addVehicleTo.name}</span>
+              </div>
+              <button onClick={() => setAddVehicleTo(null)} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <form onSubmit={handleAddVehicle} className="p-6 space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Placa</label>
+                <input 
+                  autoFocus
+                  placeholder="Ex: BRA2E19"
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border uppercase font-mono font-bold"
+                  value={newVehicle.plate}
+                  onChange={e => setNewVehicle({...newVehicle, plate: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Modelo / Versão</label>
+                <input 
+                  placeholder="Ex: Toyota Corolla XEi"
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  value={newVehicle.model}
+                  onChange={e => setNewVehicle({...newVehicle, model: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="secondary" onClick={() => setAddVehicleTo(null)}>Cancelar</Button>
+                <Button type="submit" variant="primary">Confirmar Vínculo</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT CUSTOMER */}
       {editingCustomer && (
-        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-lg overflow-hidden">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-lg overflow-hidden animate-in fade-in duration-200">
             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900">Editar Cliente</h3>
+              <h3 className="text-lg font-bold text-gray-900">Editar Dados do Cliente</h3>
               <button onClick={() => setEditingCustomer(null)} className="text-gray-400 hover:text-gray-600">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
@@ -197,27 +269,27 @@ const CustomerList: React.FC = () => {
             <form onSubmit={handleUpdateCustomer} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">Nome Completo</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nome Completo</label>
                   <input 
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
                     value={editingCustomer.name}
                     onChange={e => setEditingCustomer({...editingCustomer, name: e.target.value})}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Documento</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Documento (CPF/CNPJ)</label>
                   <input 
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
                     value={editingCustomer.document}
                     onChange={e => setEditingCustomer({...editingCustomer, document: e.target.value})}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Telefone</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Telefone</label>
                   <input 
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
                     value={editingCustomer.phone}
                     onChange={e => setEditingCustomer({...editingCustomer, phone: e.target.value})}
                   />
@@ -232,10 +304,10 @@ const CustomerList: React.FC = () => {
         </div>
       )}
 
-      {/* Edit Vehicle Modal */}
+      {/* MODAL: EDIT VEHICLE */}
       {editingVehicle && (
-        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-sm overflow-hidden">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
               <h3 className="text-lg font-bold text-gray-900">Editar Veículo</h3>
               <button onClick={() => setEditingVehicle(null)} className="text-gray-400 hover:text-gray-600">
@@ -244,18 +316,18 @@ const CustomerList: React.FC = () => {
             </div>
             <form onSubmit={handleUpdateVehicle} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Placa</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Placa</label>
                 <input 
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border uppercase"
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border uppercase font-mono font-bold"
                   value={editingVehicle.vehicle.plate}
-                  onChange={e => setEditingVehicle({...editingVehicle, vehicle: {...editingVehicle.vehicle, plate: e.target.value}})}
+                  onChange={e => setEditingVehicle({...editingVehicle, vehicle: {...editingVehicle.vehicle, plate: e.target.value.toUpperCase()}})}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Modelo</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Modelo</label>
                 <input 
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
                   value={editingVehicle.vehicle.model}
                   onChange={e => setEditingVehicle({...editingVehicle, vehicle: {...editingVehicle.vehicle, model: e.target.value}})}
                   required
@@ -263,7 +335,7 @@ const CustomerList: React.FC = () => {
               </div>
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                 <Button type="button" variant="secondary" onClick={() => setEditingVehicle(null)}>Cancelar</Button>
-                <Button type="submit" variant="primary">Salvar</Button>
+                <Button type="submit" variant="primary">Atualizar</Button>
               </div>
             </form>
           </div>
