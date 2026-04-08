@@ -59,13 +59,17 @@ public class CustomersController : ControllerBase
     [HttpPost("{id}/vehicles")]
     public async Task<IActionResult> AddVehicle(Guid id, [FromBody] AddVehicleRequest request)
     {
-        var customer = await _context.Customers.Include(c => c.Vehicles).FirstOrDefaultAsync(c => c.Id == id);
-        if (customer == null)
+        var customerExists = await _context.Customers.AnyAsync(c => c.Id == id);
+        if (!customerExists)
             return NotFound();
 
-        customer.AddVehicle(request.Plate, request.Model);
+        var vehicle = new Vehicle(request.Plate, request.Model, id);
+        _context.Vehicles.Add(vehicle);
+        
         await _context.SaveChangesAsync();
 
+        // Return the updated customer with all vehicles
+        var customer = await _context.Customers.Include(c => c.Vehicles).FirstOrDefaultAsync(c => c.Id == id);
         return Ok(customer);
     }
 

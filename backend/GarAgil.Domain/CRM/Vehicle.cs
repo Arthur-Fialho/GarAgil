@@ -13,7 +13,7 @@ public class Vehicle
     private Vehicle() { }
 #pragma warning restore CS8618
 
-    public Vehicle(string plate, string model)
+    public Vehicle(string plate, string model, Guid customerId)
     {
         if (string.IsNullOrWhiteSpace(plate))
             throw new ArgumentException("Placa do veículo é obrigatória.");
@@ -24,6 +24,7 @@ public class Vehicle
         Id = Guid.NewGuid();
         Plate = plate.ToUpper();
         Model = model;
+        CustomerId = customerId;
     }
 
     public void Update(string plate, string model)

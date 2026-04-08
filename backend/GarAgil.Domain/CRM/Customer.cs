@@ -43,7 +43,7 @@ public class Customer
 
     public void AddVehicle(string plate, string model)
     {
-        _vehicles.Add(new Vehicle(plate, model));
+        _vehicles.Add(new Vehicle(plate, model, this.Id));
     }
 
     public void UpdateAddress(string cep, string street, string number, string neighborhood, string city, string state)
@@ -81,7 +81,11 @@ public class Customer
 
     private bool IsValidDocument(string document)
     {
-        // Simple regex stub for pt-BR CPF/CNPJ validation to satisfy the current tests
-        return Regex.IsMatch(document, @"(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)|(^\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}$)");
+        // Allows: 
+        // 12345678901 (unformatted CPF)
+        // 123.456.789-01 (formatted CPF)
+        // 12345678000190 (unformatted CNPJ)
+        // 12.345.678/0001-90 (formatted CNPJ)
+        return Regex.IsMatch(document, @"(^\d{11}$)|(^\d{14}$)|(^\d{3}\.\d{3}\.\d{3}\-\d{2}$)|(^\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}$)");
     }
 }

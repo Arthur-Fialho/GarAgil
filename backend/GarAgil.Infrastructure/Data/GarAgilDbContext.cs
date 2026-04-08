@@ -22,7 +22,15 @@ public class GarAgilDbContext : DbContext
 
         // Simple mappings for Phase 1. 
         modelBuilder.Entity<Customer>().HasKey(c => c.Id);
-        modelBuilder.Entity<Customer>().HasMany(c => c.Vehicles).WithOne().HasForeignKey(v => v.CustomerId);
+        
+        // Configure backing field for DDD encapsulation
+        var navigation = modelBuilder.Entity<Customer>().Metadata.FindNavigation(nameof(Customer.Vehicles));
+        navigation?.SetPropertyAccessMode(PropertyAccessMode.Field);
+
+        modelBuilder.Entity<Customer>()
+            .HasMany(c => c.Vehicles)
+            .WithOne()
+            .HasForeignKey(v => v.CustomerId);
         
         modelBuilder.Entity<Vehicle>().HasKey(v => v.Id);
         modelBuilder.Entity<ServiceOrder>().HasKey(s => s.Id);
