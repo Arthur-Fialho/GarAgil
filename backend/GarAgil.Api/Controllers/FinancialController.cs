@@ -49,16 +49,9 @@ public class FinancialController : ControllerBase
         var account = await _context.PayableAccounts.FindAsync(id);
         if (account == null) return NotFound();
 
-        try
-        {
-            account.Update(request.Description, request.Amount, request.DueDate);
-            await _context.SaveChangesAsync();
-            return Ok(account);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        account.Update(request.Description, request.Amount, request.DueDate);
+        await _context.SaveChangesAsync();
+        return Ok(account);
     }
 
     [HttpPost("payables/{id}/pay")]
@@ -67,16 +60,9 @@ public class FinancialController : ControllerBase
         var account = await _context.PayableAccounts.FindAsync(id);
         if (account == null) return NotFound();
 
-        try
-        {
-            account.Pay();
-            await _context.SaveChangesAsync();
-            return Ok(account);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        account.Pay();
+        await _context.SaveChangesAsync();
+        return Ok(account);
     }
 
     [HttpPost("payables/{id}/undo-pay")]
@@ -85,16 +71,9 @@ public class FinancialController : ControllerBase
         var account = await _context.PayableAccounts.FindAsync(id);
         if (account == null) return NotFound();
 
-        try
-        {
-            account.UndoPayment();
-            await _context.SaveChangesAsync();
-            return Ok(account);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        account.UndoPayment();
+        await _context.SaveChangesAsync();
+        return Ok(account);
     }
 
     // Accounts Receivable
@@ -127,16 +106,9 @@ public class FinancialController : ControllerBase
         var account = await _context.ReceivableAccounts.FindAsync(id);
         if (account == null) return NotFound();
 
-        try
-        {
-            account.Update(request.Description, request.Amount, request.DueDate);
-            await _context.SaveChangesAsync();
-            return Ok(account);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        account.Update(request.Description, request.Amount, request.DueDate);
+        await _context.SaveChangesAsync();
+        return Ok(account);
     }
 
     [HttpPost("receivables/{id}/receive")]
@@ -145,16 +117,9 @@ public class FinancialController : ControllerBase
         var account = await _context.ReceivableAccounts.FindAsync(id);
         if (account == null) return NotFound();
 
-        try
-        {
-            account.Receive();
-            await _context.SaveChangesAsync();
-            return Ok(account);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        account.Receive();
+        await _context.SaveChangesAsync();
+        return Ok(account);
     }
 
     [HttpPost("receivables/{id}/undo-receive")]
@@ -163,16 +128,9 @@ public class FinancialController : ControllerBase
         var account = await _context.ReceivableAccounts.FindAsync(id);
         if (account == null) return NotFound();
 
-        try
-        {
-            account.UndoReceive();
-            await _context.SaveChangesAsync();
-            return Ok(account);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        account.UndoReceive();
+        await _context.SaveChangesAsync();
+        return Ok(account);
     }
 
     // Summary for Dashboard

@@ -1,9 +1,8 @@
 using GarAgil.Domain.CRM;
-using GarAgil.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GarAgil.Api.Controllers;
@@ -13,24 +12,24 @@ namespace GarAgil.Api.Controllers;
 [Route("api/[controller]")]
 public class CustomersController : ControllerBase
 {
-    private readonly GarAgilDbContext _context;
+    private readonly ICustomerRepository _customerRepository;
 
-    public CustomersController(GarAgilDbContext context)
+    public CustomersController(ICustomerRepository customerRepository)
     {
-        _context = context;
+        _customerRepository = customerRepository;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetCustomers()
     {
-        var customers = await _context.Customers.Include(c => c.Vehicles).ToListAsync();
+        var customers = await _customerRepository.GetAllAsync();
         return Ok(customers);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetCustomer(Guid id)
     {
-        var customer = await _context.Customers.Include(c => c.Vehicles).FirstOrDefaultAsync(c => c.Id == id);
+        var customer = await _customerRepository.GetByIdAsync(id);
         if (customer == null)
             return NotFound();
 
@@ -50,8 +49,8 @@ public class CustomersController : ControllerBase
             customer.UpdateAddress(request.Cep, request.Street ?? "", request.Number ?? "", request.Neighborhood ?? "", request.City ?? "", request.State ?? "");
         }
 
-        _context.Customers.Add(customer);
-        await _context.SaveChangesAsync();
+        await _customerRepository.AddAsync(customer);
+        await _customerRepository.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
     }
@@ -59,54 +58,47 @@ public class CustomersController : ControllerBase
     [HttpPost("{id}/vehicles")]
     public async Task<IActionResult> AddVehicle(Guid id, [FromBody] AddVehicleRequest request)
     {
-        var customerExists = await _context.Customers.AnyAsync(c => c.Id == id);
+        var customerExists = await _customerRepository.ExistsAsync(id);
         if (!customerExists)
             return NotFound();
 
         var vehicle = new Vehicle(request.Plate, request.Model, id);
-        _context.Vehicles.Add(vehicle);
+        await _customerRepository.AddVehicleAsync(vehicle);
         
-        await _context.SaveChangesAsync();
+        await _customerRepository.SaveChangesAsync();
 
         // Return the updated customer with all vehicles
-        var customer = await _context.Customers.Include(c => c.Vehicles).FirstOrDefaultAsync(c => c.Id == id);
+        var customer = await _customerRepository.GetByIdAsync(id);
         return Ok(customer);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateCustomer(Guid id, [FromBody] UpdateCustomerRequest request)
     {
-        var customer = await _context.Customers.Include(c => c.Vehicles).FirstOrDefaultAsync(c => c.Id == id);
+        var customer = await _customerRepository.GetByIdAsync(id);
         if (customer == null)
             return NotFound();
 
-        try
+        customer.UpdateDetails(request.Name, request.Document, request.Email ?? "", request.Phone ?? "");
+        
+        if (!string.IsNullOrEmpty(request.Cep))
         {
-            customer.UpdateDetails(request.Name, request.Document, request.Email ?? "", request.Phone ?? "");
-            
-            if (!string.IsNullOrEmpty(request.Cep))
-            {
-                customer.UpdateAddress(request.Cep, request.Street ?? "", request.Number ?? "", request.Neighborhood ?? "", request.City ?? "", request.State ?? "");
-            }
+            customer.UpdateAddress(request.Cep, request.Street ?? "", request.Number ?? "", request.Neighborhood ?? "", request.City ?? "", request.State ?? "");
+        }
 
-            await _context.SaveChangesAsync();
-            return Ok(customer);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        await _customerRepository.SaveChangesAsync();
+        return Ok(customer);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCustomer(Guid id)
     {
-        var customer = await _context.Customers.Include(c => c.Vehicles).FirstOrDefaultAsync(c => c.Id == id);
+        var customer = await _customerRepository.GetByIdAsync(id);
         if (customer == null)
             return NotFound();
 
-        _context.Customers.Remove(customer);
-        await _context.SaveChangesAsync();
+        await _customerRepository.RemoveAsync(customer);
+        await _customerRepository.SaveChangesAsync();
 
         return NoContent();
     }
@@ -114,7 +106,7 @@ public class CustomersController : ControllerBase
     [HttpPut("{id}/vehicles/{vehicleId}")]
     public async Task<IActionResult> UpdateVehicle(Guid id, Guid vehicleId, [FromBody] UpdateVehicleRequest request)
     {
-        var customer = await _context.Customers.Include(c => c.Vehicles).FirstOrDefaultAsync(c => c.Id == id);
+        var customer = await _customerRepository.GetByIdAsync(id);
         if (customer == null)
             return NotFound();
 
@@ -122,27 +114,20 @@ public class CustomersController : ControllerBase
         if (vehicle == null)
             return NotFound();
 
-        try
-        {
-            vehicle.Update(request.Plate, request.Model);
-            await _context.SaveChangesAsync();
-            return Ok(customer);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        vehicle.Update(request.Plate, request.Model);
+        await _customerRepository.SaveChangesAsync();
+        return Ok(customer);
     }
 
     [HttpDelete("{id}/vehicles/{vehicleId}")]
     public async Task<IActionResult> RemoveVehicle(Guid id, Guid vehicleId)
     {
-        var customer = await _context.Customers.Include(c => c.Vehicles).FirstOrDefaultAsync(c => c.Id == id);
+        var customer = await _customerRepository.GetByIdAsync(id);
         if (customer == null)
             return NotFound();
 
         customer.RemoveVehicle(vehicleId);
-        await _context.SaveChangesAsync();
+        await _customerRepository.SaveChangesAsync();
 
         return Ok(customer);
     }

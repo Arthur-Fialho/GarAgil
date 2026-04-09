@@ -31,17 +31,10 @@ public class InventoryController : ControllerBase
         if (request == null || string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Sku))
             return BadRequest(new { message = "Nome e SKU são obrigatórios." });
 
-        try
-        {
-            var part = new Part(request.Name, request.Sku, request.CostPrice, request.SellingPrice, request.InitialStock);
-            _context.Parts.Add(part);
-            await _context.SaveChangesAsync();
-            return Ok(part);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var part = new Part(request.Name, request.Sku, request.CostPrice, request.SellingPrice, request.InitialStock);
+        _context.Parts.Add(part);
+        await _context.SaveChangesAsync();
+        return Ok(part);
     }
 
     [HttpPut("{id}")]
@@ -50,16 +43,9 @@ public class InventoryController : ControllerBase
         var part = await _context.Parts.FindAsync(id);
         if (part == null) return NotFound();
 
-        try
-        {
-            part.Update(request.Name, request.Sku, request.CostPrice, request.SellingPrice);
-            await _context.SaveChangesAsync();
-            return Ok(part);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        part.Update(request.Name, request.Sku, request.CostPrice, request.SellingPrice);
+        await _context.SaveChangesAsync();
+        return Ok(part);
     }
 
     [HttpPost("{id}/add-stock")]
@@ -68,16 +54,9 @@ public class InventoryController : ControllerBase
         var part = await _context.Parts.FindAsync(id);
         if (part == null) return NotFound();
 
-        try
-        {
-            part.AddStock(request.Quantity);
-            await _context.SaveChangesAsync();
-            return Ok(part);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        part.AddStock(request.Quantity);
+        await _context.SaveChangesAsync();
+        return Ok(part);
     }
 
     [HttpPost("{id}/remove-stock")]
@@ -86,16 +65,9 @@ public class InventoryController : ControllerBase
         var part = await _context.Parts.FindAsync(id);
         if (part == null) return NotFound();
 
-        try
-        {
-            part.RemoveStock(request.Quantity);
-            await _context.SaveChangesAsync();
-            return Ok(part);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        part.RemoveStock(request.Quantity);
+        await _context.SaveChangesAsync();
+        return Ok(part);
     }
 }
 

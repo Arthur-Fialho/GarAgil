@@ -1,10 +1,9 @@
 using GarAgil.Domain.Workflow;
-using GarAgil.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace GarAgil.Api.Controllers;
 
@@ -12,43 +11,40 @@ namespace GarAgil.Api.Controllers;
 [Route("api/[controller]")]
 public class ServiceOrdersController : ControllerBase
 {
-    private readonly GarAgilDbContext _context;
+    private readonly IServiceOrderRepository _serviceOrderRepository;
 
-    public ServiceOrdersController(GarAgilDbContext context)
+    public ServiceOrdersController(IServiceOrderRepository serviceOrderRepository)
     {
-        _context = context;
+        _serviceOrderRepository = serviceOrderRepository;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetServiceOrders()
     {
-        var orders = await _context.ServiceOrders.Include(o => o.Tasks).ToListAsync();
+        var orders = await _serviceOrderRepository.GetAllAsync();
         return Ok(orders);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetCustomer(Guid id)
     {
-        var customer = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
-        if (customer == null)
+        var order = await _serviceOrderRepository.GetByIdAsync(id);
+        if (order == null)
             return NotFound();
 
-        return Ok(customer);
+        return Ok(order);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateServiceOrder([FromBody] CreateServiceOrderRequest request)
     {
         if (request == null || string.IsNullOrWhiteSpace(request.VehiclePlate) || string.IsNullOrWhiteSpace(request.VehicleModel))
-            return BadRequest();
+            return BadRequest(new { message = "Placa e Modelo são obrigatórios." });
 
         var cleanPlate = request.VehiclePlate.Replace("-", "").ToUpper();
 
         // Check if there is already an open order for this vehicle
-        bool hasOpenOrder = await _context.ServiceOrders.AnyAsync(o => 
-            o.VehiclePlate == cleanPlate && 
-            o.Status != ServiceOrderStatus.Finalizado && 
-            o.Status != ServiceOrderStatus.Cancelado);
+        bool hasOpenOrder = await _serviceOrderRepository.HasOpenOrderForVehicleAsync(cleanPlate);
 
         if (hasOpenOrder)
         {
@@ -69,8 +65,8 @@ public class ServiceOrdersController : ControllerBase
             order.AddTask(desc);
         }
 
-        _context.ServiceOrders.Add(order);
-        await _context.SaveChangesAsync();
+        await _serviceOrderRepository.AddAsync(order);
+        await _serviceOrderRepository.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetCustomer), new { id = order.Id }, order);
     }
@@ -78,117 +74,89 @@ public class ServiceOrdersController : ControllerBase
     [HttpPost("{id}/tasks")]
     public async Task<IActionResult> AddTask(Guid id, [FromBody] AddTaskRequest request)
     {
-        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
+        var order = await _serviceOrderRepository.GetByIdAsync(id);
         if (order == null) return NotFound();
 
         var newTask = new ServiceOrderTask(request.Description, id);
-        _context.ServiceOrderTasks.Add(newTask);
+        await _serviceOrderRepository.AddTaskAsync(newTask);
         
-        await _context.SaveChangesAsync();
+        await _serviceOrderRepository.SaveChangesAsync();
         return Ok(order);
     }
 
     [HttpPatch("{id}/status")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request)
     {
-        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
+        var order = await _serviceOrderRepository.GetByIdAsync(id);
         if (order == null)
             return NotFound();
 
-        try
+        if (request.Status == (int)ServiceOrderStatus.Finalizado)
         {
-            if (request.Status == (int)ServiceOrderStatus.Finalizado)
-            {
-                order.FinalizeOrder();
-            }
-            else if (request.Status == (int)ServiceOrderStatus.Cancelado)
-            {
-                order.CancelOrder();
-            }
-            else
-            {
-                order.UpdateStatus((ServiceOrderStatus)request.Status);
-            }
-            
-            await _context.SaveChangesAsync();
-            return Ok(order);
+            order.FinalizeOrder();
         }
-        catch (Exception ex)
+        else if (request.Status == (int)ServiceOrderStatus.Cancelado)
         {
-            return BadRequest(new { message = ex.Message, detail = ex.InnerException?.Message });
+            order.CancelOrder();
         }
+        else
+        {
+            order.UpdateStatus((ServiceOrderStatus)request.Status);
+        }
+        
+        await _serviceOrderRepository.SaveChangesAsync();
+        return Ok(order);
     }
 
     [HttpPost("{id}/emit-nf")]
     public async Task<IActionResult> EmitNf(Guid id)
     {
-        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
+        var order = await _serviceOrderRepository.GetByIdAsync(id);
         if (order == null)
             return NotFound();
 
-        try
-        {
-            order.EmitNf();
-            await _context.SaveChangesAsync();
-            return Ok(order);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message, detail = ex.InnerException?.Message });
-        }
+        order.EmitNf();
+        await _serviceOrderRepository.SaveChangesAsync();
+        return Ok(order);
     }
 
     [HttpPost("{id}/finish-maintenance")]
     public async Task<IActionResult> FinishMaintenance(Guid id, [FromBody] MechanicActionRequest request)
     {
-        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
+        var order = await _serviceOrderRepository.GetByIdAsync(id);
         if (order == null)
             return NotFound();
 
-        try
-        {
-            order.FinishMaintenance(request.Notes);
-            await _context.SaveChangesAsync();
-            return Ok(order);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message, detail = ex.InnerException?.Message });
-        }
+        order.FinishMaintenance(request.Notes);
+        await _serviceOrderRepository.SaveChangesAsync();
+        return Ok(order);
     }
 
     [HttpPost("{id}/additional-repair")]
     public async Task<IActionResult> AdditionalRepair(Guid id, [FromBody] MechanicActionRequest request)
     {
-        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
+        var order = await _serviceOrderRepository.GetByIdAsync(id);
         if (order == null)
             return NotFound();
 
-        try
+        if (request.FinishCurrent)
         {
-            if (request.FinishCurrent)
-            {
-                order.FinishMaintenance("Serviço concluído. Novo reparo solicitado: " + request.Notes);
-                order.EmitNf(); 
-                order.FinalizeOrder();
-            }
-
-            var newOrder = new ServiceOrder(order.VehiclePlate, order.VehicleModel, request.Notes);
-            _context.ServiceOrders.Add(newOrder);
-
-            await _context.SaveChangesAsync();
-            return Ok(newOrder);
+            order.FinishMaintenance("Serviço concluído. Novo reparo solicitado: " + request.Notes);
+            order.EmitNf(); 
+            order.FinalizeOrder();
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message, detail = ex.InnerException?.Message });
-        }
+
+        var newOrder = new ServiceOrder(order.VehiclePlate, order.VehicleModel, request.Notes);
+        await _serviceOrderRepository.AddAsync(newOrder);
+
+        await _serviceOrderRepository.SaveChangesAsync();
+        return Ok(newOrder);
     }
 
     [HttpPatch("{id}/tasks/{taskId}/toggle")]
     public async Task<IActionResult> ToggleTask(Guid id, Guid taskId)
     {
-        var order = await _context.ServiceOrders.Include(o => o.Tasks).FirstOrDefaultAsync(o => o.Id == id);
+        var order = await _serviceOrderRepository.GetByIdAsync(id);
         if (order == null) return NotFound();
 
         var task = order.Tasks.FirstOrDefault(t => t.Id == taskId);
@@ -203,7 +171,7 @@ public class ServiceOrdersController : ControllerBase
             task.MarkAsCompleted();
         }
 
-        await _context.SaveChangesAsync();
+        await _serviceOrderRepository.SaveChangesAsync();
         return Ok(order);
     }
 }

@@ -36,6 +36,10 @@ builder.Services.AddScoped<GarAgil.Domain.Inventory.IInvoiceReaderAi>(sp => sp.G
 // Register External APIs
 builder.Services.AddHttpClient<GarAgil.Domain.CRM.IExternalDataGateway, GarAgil.Infrastructure.Data.BrasilApiGateway>();
 
+// Register Repositories
+builder.Services.AddScoped<GarAgil.Domain.CRM.ICustomerRepository, GarAgil.Infrastructure.Data.Repositories.CustomerRepository>();
+builder.Services.AddScoped<GarAgil.Domain.Workflow.IServiceOrderRepository, GarAgil.Infrastructure.Data.Repositories.ServiceOrderRepository>();
+
 // Register Application Services
 builder.Services.AddScoped<GarAgil.Application.Workflow.BudgetingService>();
 builder.Services.AddScoped<GarAgil.Application.CRM.FeedbackAnalysisService>();
@@ -69,6 +73,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<GarAgil.Api.Middlewares.GlobalExceptionMiddleware>();
 
 // Automatically apply pending migrations to the SQLite database
 using (var scope = app.Services.CreateScope())
