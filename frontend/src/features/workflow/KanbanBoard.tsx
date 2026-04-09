@@ -174,22 +174,22 @@ const KanbanBoard: React.FC = () => {
     <div className="flex flex-col w-full h-full relative">
       {user?.role === 'Admin' && <ServiceOrderForm onSuccess={fetchOrders} />}
       
-      <div className="flex flex-col sm:flex-row gap-4 w-full overflow-x-auto pb-4">
+      <div className="flex flex-col sm:flex-row gap-4 w-full h-full overflow-x-auto pb-4 flex-1 min-h-0">
         {COLUMNS.map(column => (
           <div 
             key={column.id}
-            className={`flex-1 min-w-[300px] sm:min-w-[250px] rounded-lg border border-gray-200 shadow-sm p-4 ${column.bgColor}`}
+            className={`flex flex-col flex-1 min-w-[300px] sm:min-w-[250px] rounded-lg border border-gray-200 shadow-sm p-4 h-full ${column.bgColor}`}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, column.id)}
           >
-            <h4 className="font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2 flex justify-between items-center">
+            <h4 className="font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2 flex justify-between items-center shrink-0">
               {column.title}
               <span className="bg-white/50 px-2 py-0.5 rounded-full text-xs text-gray-500 border border-gray-100">
                 {orders.filter(o => o.status === column.id).length}
               </span>
             </h4>
             
-            <div className="space-y-3 min-h-[150px]">
+            <div className="space-y-3 flex-1 overflow-y-auto min-h-[150px] pr-2 custom-scrollbar">
               {orders.filter(o => o.status === column.id).map(order => (
                 <div 
                   key={order.id}
