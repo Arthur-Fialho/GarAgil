@@ -23,33 +23,6 @@ public class ServiceOrdersController : ControllerBase
     public async Task<IActionResult> GetServiceOrders()
     {
         var orders = await _context.ServiceOrders.Include(o => o.Tasks).ToListAsync();
-        
-        // Fetch all historical completed tasks for these vehicles to show persistence on cards
-        var plates = orders.Select(o => o.VehiclePlate).Distinct().ToList();
-        var allPastTasks = await _context.ServiceOrderTasks
-            .Where(t => t.IsCompleted && _context.ServiceOrders
-                .Where(so => plates.Contains(so.VehiclePlate))
-                .Select(so => so.Id).Contains(t.ServiceOrderId))
-            .ToListAsync();
-
-        foreach (var order in orders)
-        {
-            // Get completed tasks from other OS of the same plate
-            var historicalTasks = allPastTasks
-                .Where(t => t.ServiceOrderId != order.Id && 
-                           _context.ServiceOrders.Any(so => so.Id == t.ServiceOrderId && so.VehiclePlate == order.VehiclePlate))
-                .ToList();
-
-            // We combine them for the UI display (using a simple logic for the prototype)
-            // In a real app we might want a separate 'History' property in the DTO
-            var currentTasks = order.Tasks.ToList();
-            var combined = historicalTasks.Concat(currentTasks).OrderBy(t => t.CreatedAt).ToList();
-            
-            // Temporary hack: use reflection to update the private backing field for the prototype display
-            var field = typeof(ServiceOrder).GetField("_tasks", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            field?.SetValue(order, combined);
-        }
-
         return Ok(orders);
     }
 
@@ -69,13 +42,26 @@ public class ServiceOrdersController : ControllerBase
         if (request == null || string.IsNullOrWhiteSpace(request.VehiclePlate) || string.IsNullOrWhiteSpace(request.VehicleModel))
             return BadRequest();
 
+        var cleanPlate = request.VehiclePlate.Replace("-", "").ToUpper();
+
+        // Check if there is already an open order for this vehicle
+        bool hasOpenOrder = await _context.ServiceOrders.AnyAsync(o => 
+            o.VehiclePlate == cleanPlate && 
+            o.Status != ServiceOrderStatus.Finalizado && 
+            o.Status != ServiceOrderStatus.Cancelado);
+
+        if (hasOpenOrder)
+        {
+            return BadRequest(new { message = "Já existe uma ordem de serviço em andamento para este veículo." });
+        }
+
         // Handle both old 'Description' field and new 'Descriptions' list for backward compatibility
         var initialTasks = request.Descriptions != null && request.Descriptions.Any() 
             ? request.Descriptions 
             : new List<string> { request.Description };
 
         // Create OS with the FIRST description
-        var order = new ServiceOrder(request.VehiclePlate, request.VehicleModel, initialTasks.First());
+        var order = new ServiceOrder(cleanPlate, request.VehicleModel, initialTasks.First());
 
         // Add the REST of the descriptions as tasks using the official domain method
         foreach (var desc in initialTasks.Skip(1))
