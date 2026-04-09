@@ -170,76 +170,77 @@ const InventoryDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Grid of Parts (Cards for better responsiveness) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredParts.map(part => (
-          <div key={part.id} className={`bg-white rounded-xl border shadow-sm p-5 flex flex-col gap-3 relative overflow-hidden transition-all ${part.currentStock <= 5 ? 'border-orange-300' : 'border-gray-200'}`}>
-            {part.currentStock <= 5 && (
-              <div className="absolute top-0 right-0 bg-orange-500 text-white text-[9px] font-black uppercase px-2 py-1 tracking-widest rounded-bl-lg">
-                Estoque Baixo
-              </div>
-            )}
-            
-            <div>
-              <div className="flex justify-between items-start">
-                <h3 className="font-bold text-gray-900 leading-tight uppercase pr-16">{part.name}</h3>
-              </div>
-              <p className="text-[10px] font-mono text-gray-500 mt-1 uppercase tracking-widest bg-gray-50 inline-block px-1.5 py-0.5 rounded border border-gray-100">SKU: {part.sku}</p>
-            </div>
-
-            <div className="flex justify-between items-center mt-2 border-t border-gray-50 pt-3">
-              <div className="flex flex-col">
-                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Estoque Atual</span>
-                <span className={`text-2xl font-black ${part.currentStock <= 5 ? 'text-orange-600' : 'text-gray-800'}`}>
-                  {part.currentStock}
-                </span>
-              </div>
-              {isAdmin && (
-                <div className="flex flex-col text-right">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Preço de Venda</span>
-                  <span className="text-lg font-bold text-green-600">
-                    {formatCurrency(part.sellingPrice)}
+      {/* List of Parts (Table) */}
+      <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Produto</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">SKU</th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-widest">Estoque</th>
+              {isAdmin && <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Preço Venda</th>}
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Ações</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredParts.map(part => (
+              <tr key={part.id} className={`hover:bg-blue-50/30 transition-colors ${part.currentStock <= 5 ? 'bg-orange-50/30' : ''}`}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-bold text-gray-900 uppercase">{part.name}</div>
+                  {part.currentStock <= 5 && <span className="text-[9px] font-black text-orange-600 uppercase tracking-widest">Estoque Baixo</span>}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">{part.sku}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <span className={`text-lg font-black ${part.currentStock <= 5 ? 'text-orange-600' : 'text-gray-800'}`}>
+                    {part.currentStock}
                   </span>
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-wrap gap-2 mt-2 pt-3 border-t border-gray-50">
-              <button 
-                onClick={() => openStockModal(part, 'remove')}
-                className="flex-1 py-1.5 px-2 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded text-[10px] font-black uppercase tracking-widest border border-orange-100 transition-colors flex items-center justify-center gap-1"
-                title="Dar saída em peça para uso em OS"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" /></svg>
-                Dar Saída
-              </button>
-              
-              {isAdmin && (
-                <>
+                </td>
+                {isAdmin && (
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-green-600">
+                    {formatCurrency(part.sellingPrice)}
+                  </td>
+                )}
+                <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
                   <button 
-                    onClick={() => openStockModal(part, 'add')}
-                    className="flex-1 py-1.5 px-2 bg-green-50 text-green-700 hover:bg-green-100 rounded text-[10px] font-black uppercase tracking-widest border border-green-100 transition-colors flex items-center justify-center gap-1"
+                    onClick={() => openStockModal(part, 'remove')}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-md text-[10px] font-black uppercase tracking-widest border border-orange-100 transition-colors"
+                    title="Dar saída em peça para uso em OS"
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                    Entrada
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" /></svg>
+                    Saída
                   </button>
-                  <button 
-                    onClick={() => openEditForm(part)}
-                    className="py-1.5 px-3 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-primary rounded text-[10px] font-black uppercase tracking-widest border border-gray-200 transition-colors"
-                  >
-                    Editar
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        ))}
-        {filteredParts.length === 0 && (
-          <div className="col-span-full py-12 flex flex-col items-center justify-center text-gray-400">
-            <svg className="w-12 h-12 mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-            <p className="font-medium italic">Nenhum produto encontrado.</p>
-          </div>
-        )}
+                  {isAdmin && (
+                    <>
+                      <button 
+                        onClick={() => openStockModal(part, 'add')}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-md text-[10px] font-black uppercase tracking-widest border border-green-100 transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                        Entrada
+                      </button>
+                      <button 
+                        onClick={() => openEditForm(part)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-primary rounded-md text-[10px] font-black uppercase tracking-widest border border-gray-200 transition-colors"
+                      >
+                        Editar
+                      </button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {filteredParts.length === 0 && (
+              <tr>
+                <td colSpan={isAdmin ? 5 : 4} className="px-6 py-12 text-center">
+                  <div className="flex flex-col items-center justify-center text-gray-400">
+                    <svg className="w-12 h-12 mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    <p className="font-medium italic">Nenhum produto encontrado.</p>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* CREATE / EDIT FORM MODAL */}
