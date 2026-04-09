@@ -20,9 +20,10 @@ if (string.IsNullOrEmpty(connectionString))
     connectionString = "Host=localhost;Database=GarAgilDb;Username=postgres;Password=SuperSecretPassword123!";
 }
 
-// Register DbContext with InMemoryDatabase for easy local prototyping
+// Register DbContext with SQLite for local persistence
+var dbPath = System.IO.Path.Join(Environment.CurrentDirectory, "garagil.db");
 builder.Services.AddDbContext<GarAgilDbContext>(options =>
-    options.UseInMemoryDatabase("GarAgilDb"));
+    options.UseSqlite($"Data Source={dbPath}"));
 
 // Register AI Gateway using HttpClient
 builder.Services.AddHttpClient<GarAgil.Infrastructure.AI.GeminiGateway>();
@@ -68,6 +69,16 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Automatically apply pending migrations to the SQLite database
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<GarAgilDbContext>();
+    if (db.Database.IsRelational())
+    {
+        db.Database.Migrate();
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {

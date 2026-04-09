@@ -75,7 +75,7 @@ public class ServiceOrdersControllerTests : IClassFixture<WebApplicationFactory<
         var client = _factory.CreateClient();
         var request = new
         {
-            VehiclePlate = "KBM-1234",
+            VehiclePlate = "KBM1234",
             VehicleModel = "Civic 1.6",
             Description = "Troca de disco de freio"
         };
@@ -86,7 +86,7 @@ public class ServiceOrdersControllerTests : IClassFixture<WebApplicationFactory<
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain("KBM-1234");
+        content.Should().Contain("KBM1234");
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class ServiceOrdersControllerTests : IClassFixture<WebApplicationFactory<
         var client = _factory.CreateClient();
         var createRequest = new
         {
-            VehiclePlate = "AAA-1111",
+            VehiclePlate = "AAA1111",
             VehicleModel = "Civic 1.6",
             Description = "Revisão geral"
         };
