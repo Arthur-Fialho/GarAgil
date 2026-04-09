@@ -49,4 +49,18 @@ public class Part
 
         CurrentStock += quantity;
     }
+
+    public void Update(string name, string sku, decimal costPrice, decimal sellingPrice)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Nome da peça é obrigatório.");
+
+        if (sellingPrice < costPrice)
+            throw new ArgumentException("Preço de venda não pode ser menor que o custo.");
+
+        Name = name;
+        Sku = sku;
+        CostPrice = costPrice;
+        SellingPrice = sellingPrice;
+    }
 }

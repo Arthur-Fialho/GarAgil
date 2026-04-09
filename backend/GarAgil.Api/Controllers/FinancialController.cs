@@ -21,9 +21,16 @@ public class FinancialController : ControllerBase
 
     // Accounts Payable
     [HttpGet("payables")]
-    public async Task<IActionResult> GetPayables()
+    public async Task<IActionResult> GetPayables([FromQuery] DateTime? start, [FromQuery] DateTime? end)
     {
-        var payables = await _context.PayableAccounts.OrderByDescending(p => p.DueDate).ToListAsync();
+        var query = _context.PayableAccounts.AsQueryable();
+        
+        if (start.HasValue)
+            query = query.Where(p => p.DueDate >= start.Value.Date);
+        if (end.HasValue)
+            query = query.Where(p => p.DueDate <= end.Value.Date.AddDays(1).AddTicks(-1));
+
+        var payables = await query.OrderByDescending(p => p.DueDate).ToListAsync();
         return Ok(payables);
     }
 
@@ -36,22 +43,72 @@ public class FinancialController : ControllerBase
         return Ok(account);
     }
 
+    [HttpPut("payables/{id}")]
+    public async Task<IActionResult> UpdatePayable(Guid id, [FromBody] CreateAccountRequest request)
+    {
+        var account = await _context.PayableAccounts.FindAsync(id);
+        if (account == null) return NotFound();
+
+        try
+        {
+            account.Update(request.Description, request.Amount, request.DueDate);
+            await _context.SaveChangesAsync();
+            return Ok(account);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("payables/{id}/pay")]
     public async Task<IActionResult> PayAccount(Guid id)
     {
         var account = await _context.PayableAccounts.FindAsync(id);
         if (account == null) return NotFound();
 
-        account.Pay();
-        await _context.SaveChangesAsync();
-        return Ok(account);
+        try
+        {
+            account.Pay();
+            await _context.SaveChangesAsync();
+            return Ok(account);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("payables/{id}/undo-pay")]
+    public async Task<IActionResult> UndoPayAccount(Guid id)
+    {
+        var account = await _context.PayableAccounts.FindAsync(id);
+        if (account == null) return NotFound();
+
+        try
+        {
+            account.UndoPayment();
+            await _context.SaveChangesAsync();
+            return Ok(account);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     // Accounts Receivable
     [HttpGet("receivables")]
-    public async Task<IActionResult> GetReceivables()
+    public async Task<IActionResult> GetReceivables([FromQuery] DateTime? start, [FromQuery] DateTime? end)
     {
-        var receivables = await _context.ReceivableAccounts.OrderByDescending(r => r.DueDate).ToListAsync();
+        var query = _context.ReceivableAccounts.AsQueryable();
+
+        if (start.HasValue)
+            query = query.Where(p => p.DueDate >= start.Value.Date);
+        if (end.HasValue)
+            query = query.Where(p => p.DueDate <= end.Value.Date.AddDays(1).AddTicks(-1));
+
+        var receivables = await query.OrderByDescending(r => r.DueDate).ToListAsync();
         return Ok(receivables);
     }
 
@@ -64,23 +121,81 @@ public class FinancialController : ControllerBase
         return Ok(account);
     }
 
+    [HttpPut("receivables/{id}")]
+    public async Task<IActionResult> UpdateReceivable(Guid id, [FromBody] CreateAccountRequest request)
+    {
+        var account = await _context.ReceivableAccounts.FindAsync(id);
+        if (account == null) return NotFound();
+
+        try
+        {
+            account.Update(request.Description, request.Amount, request.DueDate);
+            await _context.SaveChangesAsync();
+            return Ok(account);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("receivables/{id}/receive")]
     public async Task<IActionResult> ReceiveAccount(Guid id)
     {
         var account = await _context.ReceivableAccounts.FindAsync(id);
         if (account == null) return NotFound();
 
-        account.Receive();
-        await _context.SaveChangesAsync();
-        return Ok(account);
+        try
+        {
+            account.Receive();
+            await _context.SaveChangesAsync();
+            return Ok(account);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("receivables/{id}/undo-receive")]
+    public async Task<IActionResult> UndoReceiveAccount(Guid id)
+    {
+        var account = await _context.ReceivableAccounts.FindAsync(id);
+        if (account == null) return NotFound();
+
+        try
+        {
+            account.UndoReceive();
+            await _context.SaveChangesAsync();
+            return Ok(account);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     // Summary for Dashboard
     [HttpGet("summary")]
-    public async Task<IActionResult> GetSummary()
+    public async Task<IActionResult> GetSummary([FromQuery] DateTime? start, [FromQuery] DateTime? end)
     {
-        var payables = await _context.PayableAccounts.ToListAsync();
-        var receivables = await _context.ReceivableAccounts.ToListAsync();
+        var payablesQuery = _context.PayableAccounts.AsQueryable();
+        var receivablesQuery = _context.ReceivableAccounts.AsQueryable();
+
+        if (start.HasValue)
+        {
+            payablesQuery = payablesQuery.Where(p => p.DueDate >= start.Value.Date);
+            receivablesQuery = receivablesQuery.Where(p => p.DueDate >= start.Value.Date);
+        }
+        
+        if (end.HasValue)
+        {
+            payablesQuery = payablesQuery.Where(p => p.DueDate <= end.Value.Date.AddDays(1).AddTicks(-1));
+            receivablesQuery = receivablesQuery.Where(p => p.DueDate <= end.Value.Date.AddDays(1).AddTicks(-1));
+        }
+
+        var payables = await payablesQuery.ToListAsync();
+        var receivables = await receivablesQuery.ToListAsync();
 
         var totalPaid = payables.Where(p => p.IsPaid).Sum(p => p.Amount);
         var totalToPay = payables.Where(p => !p.IsPaid).Sum(p => p.Amount);

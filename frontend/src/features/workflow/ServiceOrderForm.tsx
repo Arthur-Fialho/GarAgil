@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '../../components/Button';
 import api from '../../services/api';
 
@@ -6,7 +6,23 @@ interface ServiceOrderFormProps {
   onSuccess: () => void;
 }
 
+interface Vehicle {
+  id: string;
+  plate: string;
+  model: string;
+}
+
+interface Customer {
+  id: string;
+  name: string;
+  vehicles: Vehicle[];
+}
+
 const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
+  const [inputMode, setInputMode] = useState<'manual' | 'search'>('manual');
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+
   const [vehiclePlate, setVehiclePlate] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
   const [descriptions, setDescriptions] = useState<string[]>([]);
@@ -15,6 +31,12 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
   const [errors, setErrors] = useState({ vehiclePlate: '', vehicleModel: '', description: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (isExpanded && inputMode === 'search' && customers.length === 0) {
+      api.get('/customers').then(res => setCustomers(res.data)).catch(console.error);
+    }
+  }, [isExpanded, inputMode]);
 
   const addDescription = () => {
     if (!currentDescription.trim()) return;
@@ -65,10 +87,13 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
       setVehicleModel('');
       setDescriptions([]);
       setCurrentDescription('');
+      setSelectedCustomerId('');
       setIsExpanded(false); 
       onSuccess(); 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar ordem de serviço', error);
+      const msg = error.response?.data?.message || 'Erro ao criar ordem de serviço';
+      alert(msg);
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +115,7 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
   return (
     <div className="mb-6 bg-white p-4 border border-gray-200 rounded-lg shadow-sm animate-in slide-in-from-top-2 duration-200">
       <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-2">
-        <h4 className="text-lg font-medium text-gray-800">Registrar Novo Serviço (Veículo)</h4>
+        <h4 className="text-lg font-medium text-gray-800">Registrar Novo Serviço</h4>
         <button 
           onClick={() => setIsExpanded(false)} 
           className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
@@ -102,7 +127,90 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
         </button>
       </div>
 
+      <div className="mb-4 flex gap-4 border-b border-gray-100 pb-4">
+        <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+          <input 
+            type="radio" 
+            name="inputMode" 
+            value="manual" 
+            checked={inputMode === 'manual'} 
+            onChange={() => {
+              setInputMode('manual');
+              setVehiclePlate('');
+              setVehicleModel('');
+              setSelectedCustomerId('');
+            }} 
+            className="text-primary focus:ring-primary h-4 w-4"
+          />
+          Digitar Placa Manualmente
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+          <input 
+            type="radio" 
+            name="inputMode" 
+            value="search" 
+            checked={inputMode === 'search'} 
+            onChange={() => {
+              setInputMode('search');
+              setVehiclePlate('');
+              setVehicleModel('');
+            }} 
+            className="text-primary focus:ring-primary h-4 w-4"
+          />
+          Buscar Cliente Cadastrado
+        </label>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
+        
+        {inputMode === 'search' && (
+          <div className="flex flex-col md:flex-row gap-4 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="w-full md:w-1/2">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Selecione o Cliente</label>
+              <select
+                className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white"
+                value={selectedCustomerId}
+                onChange={e => {
+                  setSelectedCustomerId(e.target.value);
+                  setVehiclePlate('');
+                  setVehicleModel('');
+                }}
+              >
+                <option value="">-- Escolha um cliente --</option>
+                {customers.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            {selectedCustomerId && (
+              <div className="w-full md:w-1/2 animate-in fade-in">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Selecione o Veículo</label>
+                <select
+                  className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border bg-white"
+                  value={vehiclePlate}
+                  onChange={e => {
+                    const plate = e.target.value;
+                    setVehiclePlate(plate);
+                    const customer = customers.find(c => c.id === selectedCustomerId);
+                    const vehicle = customer?.vehicles.find(v => v.plate === plate);
+                    if (vehicle) {
+                      setVehicleModel(vehicle.model);
+                    } else {
+                      setVehicleModel('');
+                    }
+                  }}
+                >
+                  <option value="">-- Escolha um veículo --</option>
+                  {customers.find(c => c.id === selectedCustomerId)?.vehicles.map(v => (
+                    <option key={v.plate} value={v.plate}>{v.plate} - {v.model}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row gap-4">
           <div className="w-full md:w-1/4">
             <label htmlFor="vehiclePlate" className="block text-sm font-medium text-gray-700 font-bold mb-1 uppercase tracking-wider">Placa</label>
@@ -110,9 +218,9 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
               id="vehiclePlate" 
               value={vehiclePlate} 
               onChange={(e) => setVehiclePlate(e.target.value.toUpperCase())} 
-              disabled={isLoading}
+              disabled={isLoading || inputMode === 'search'}
               placeholder="ABC-1234"
-              className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border ${errors.vehiclePlate ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}`}
+              className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border uppercase font-mono font-bold ${inputMode === 'search' ? 'bg-gray-100 text-gray-500' : ''} ${errors.vehiclePlate ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}`}
             />
             {errors.vehiclePlate && <p className="mt-1 text-[10px] text-red-600 font-bold">{errors.vehiclePlate}</p>}
           </div>
@@ -123,9 +231,9 @@ const ServiceOrderForm: React.FC<ServiceOrderFormProps> = ({ onSuccess }) => {
               id="vehicleModel" 
               value={vehicleModel} 
               onChange={(e) => setVehicleModel(e.target.value)} 
-              disabled={isLoading}
+              disabled={isLoading || inputMode === 'search'}
               placeholder="Ex: Honda Civic"
-              className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border ${errors.vehicleModel ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}`}
+              className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border ${inputMode === 'search' ? 'bg-gray-100 text-gray-500' : ''} ${errors.vehicleModel ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}`}
             />
             {errors.vehicleModel && <p className="mt-1 text-[10px] text-red-600 font-bold">{errors.vehicleModel}</p>}
           </div>

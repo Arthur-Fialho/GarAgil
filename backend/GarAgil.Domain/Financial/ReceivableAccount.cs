@@ -38,4 +38,26 @@ public class ReceivableAccount
         IsReceived = true;
         ReceivedDate = DateTime.UtcNow;
     }
+
+    public void UndoReceive()
+    {
+        if (!IsReceived)
+            throw new InvalidOperationException("Esta conta não está recebida.");
+
+        IsReceived = false;
+        ReceivedDate = null;
+    }
+
+    public void Update(string description, decimal amount, DateTime dueDate)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+            throw new ArgumentException("A descrição é obrigatória.");
+
+        if (amount <= 0)
+            throw new ArgumentException("O valor deve ser maior que zero.");
+
+        Description = description;
+        Amount = amount;
+        DueDate = dueDate;
+    }
 }

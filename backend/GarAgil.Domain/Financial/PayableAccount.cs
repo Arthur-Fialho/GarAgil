@@ -38,4 +38,26 @@ public class PayableAccount
         IsPaid = true;
         PaymentDate = DateTime.UtcNow;
     }
+
+    public void UndoPayment()
+    {
+        if (!IsPaid)
+            throw new InvalidOperationException("Esta conta não está paga.");
+
+        IsPaid = false;
+        PaymentDate = null;
+    }
+
+    public void Update(string description, decimal amount, DateTime dueDate)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+            throw new ArgumentException("A descrição é obrigatória.");
+
+        if (amount <= 0)
+            throw new ArgumentException("O valor da conta deve ser maior que zero.");
+
+        Description = description;
+        Amount = amount;
+        DueDate = dueDate;
+    }
 }
