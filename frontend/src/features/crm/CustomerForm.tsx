@@ -22,6 +22,7 @@ const CustomerForm: React.FC = () => {
   const [createdCustomerId, setCreatedCustomerId] = useState<string | null>(null);
   const [vehiclePlate, setVehiclePlate] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
+  const [customerVehicles, setCustomerVehicles] = useState<{id: string, plate: string, model: string}[]>([]);
 
   const fetchCepData = async (searchCep: string) => {
     const cleanCep = searchCep.replace(/\D/g, '');
@@ -97,6 +98,7 @@ const CustomerForm: React.FC = () => {
       const res = await api.post('/customers', { name, document, email: '', phone, cep, street, number, neighborhood, city, state });
       setSuccessMsg('Cliente cadastrado com sucesso! Agora você pode vincular veículos.');
       setCreatedCustomerId(res.data.id);
+      setCustomerVehicles(res.data.vehicles || []);
     } catch (error) {
       console.error('Erro ao cadastrar cliente', error);
     } finally {
@@ -119,12 +121,25 @@ const CustomerForm: React.FC = () => {
 
     try {
       setIsLoading(true);
-      await api.post(`/customers/${createdCustomerId}/vehicles`, { plate: cleanPlate, model: vehicleModel });
+      const response = await api.post(`/customers/${createdCustomerId}/vehicles`, { plate: cleanPlate, model: vehicleModel });
       setSuccessMsg('Veículo vinculado com sucesso!');
+      setCustomerVehicles(response.data.vehicles || []);
       setVehiclePlate('');
       setVehicleModel('');
     } catch (error) {
       console.error('Erro ao vincular veículo', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRemoveVehicle = async (vehicleId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await api.delete(`/customers/${createdCustomerId}/vehicles/${vehicleId}`);
+      setCustomerVehicles(response.data.vehicles || []);
+    } catch (error) {
+      console.error('Erro ao remover veículo', error);
     } finally {
       setIsLoading(false);
     }
@@ -144,6 +159,7 @@ const CustomerForm: React.FC = () => {
     setSuccessMsg('');
     setVehiclePlate('');
     setVehicleModel('');
+    setCustomerVehicles([]);
   };
 
   return (
@@ -282,40 +298,66 @@ const CustomerForm: React.FC = () => {
       </form>
 
       {createdCustomerId && (
-        <form onSubmit={handleAddVehicle} className="mt-6 border-t border-gray-200 pt-6">
-          <h4 className="text-lg font-medium text-gray-800 mb-4">Vincular Veículo a este Cliente</h4>
-          <div className="flex flex-col md:flex-row gap-4 items-end">
-            <div className="w-full md:w-1/3">
-              <label htmlFor="vehiclePlate" className="block text-sm font-medium text-gray-700">Placa do Veículo</label>
-              <input 
-                id="vehiclePlate" 
-                value={vehiclePlate} 
-                onChange={(e) => setVehiclePlate(e.target.value.toUpperCase())} 
-                disabled={isLoading}
-                placeholder="ABC-1234"
-                className="mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border"
-                required
-              />
+        <div className="mt-6 border-t border-gray-200 pt-6">
+          <form onSubmit={handleAddVehicle} className="mb-6">
+            <h4 className="text-lg font-medium text-gray-800 mb-4">Vincular Veículo a este Cliente</h4>
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+              <div className="w-full md:w-1/3">
+                <label htmlFor="vehiclePlate" className="block text-sm font-medium text-gray-700">Placa do Veículo</label>
+                <input 
+                  id="vehiclePlate" 
+                  value={vehiclePlate} 
+                  onChange={(e) => setVehiclePlate(e.target.value.toUpperCase())} 
+                  disabled={isLoading}
+                  placeholder="ABC-1234"
+                  className="mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border uppercase font-mono font-bold"
+                  required
+                />
+              </div>
+              <div className="w-full md:w-1/3">
+                <label htmlFor="vehicleModel" className="block text-sm font-medium text-gray-700">Modelo</label>
+                <input 
+                  id="vehicleModel" 
+                  value={vehicleModel} 
+                  onChange={(e) => setVehicleModel(e.target.value)} 
+                  disabled={isLoading}
+                  placeholder="Ex: Honda Civic"
+                  className="mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border"
+                  required
+                />
+              </div>
+              <div className="w-full md:w-1/3">
+                <Button type="submit" disabled={isLoading} variant="success" className="w-full">
+                  {isLoading ? 'Adicionando...' : 'Adicionar Veículo'}
+                </Button>
+              </div>
             </div>
-            <div className="w-full md:w-1/3">
-              <label htmlFor="vehicleModel" className="block text-sm font-medium text-gray-700">Modelo</label>
-              <input 
-                id="vehicleModel" 
-                value={vehicleModel} 
-                onChange={(e) => setVehicleModel(e.target.value)} 
-                disabled={isLoading}
-                placeholder="Ex: Honda Civic"
-                className="mt-1 block w-full rounded-md shadow-sm sm:text-sm focus:ring-primary focus:border-primary border-gray-300 px-3 py-2 border"
-                required
-              />
+          </form>
+
+          {customerVehicles.length > 0 && (
+            <div className="mt-4 animate-in fade-in">
+              <h5 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Veículos Vinculados</h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {customerVehicles.map(v => (
+                  <div key={v.id} className="flex justify-between items-center p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div>
+                      <div className="font-bold text-gray-900 uppercase tracking-wider">{v.plate}</div>
+                      <div className="text-xs text-gray-500">{v.model}</div>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => handleRemoveVehicle(v.id)}
+                      className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title="Remover Veículo"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="w-full md:w-1/3">
-              <Button type="submit" disabled={isLoading} variant="success" className="w-full">
-                {isLoading ? 'Adicionando...' : 'Adicionar Veículo'}
-              </Button>
-            </div>
-          </div>
-        </form>
+          )}
+        </div>
       )}
     </div>
   );

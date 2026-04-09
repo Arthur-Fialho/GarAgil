@@ -194,12 +194,14 @@ const InventoryDashboard: React.FC = () => {
                   {part.currentStock}
                 </span>
               </div>
-              <div className="flex flex-col text-right">
-                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Preço de Venda</span>
-                <span className="text-lg font-bold text-green-600">
-                  {formatCurrency(part.sellingPrice)}
-                </span>
-              </div>
+              {isAdmin && (
+                <div className="flex flex-col text-right">
+                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Preço de Venda</span>
+                  <span className="text-lg font-bold text-green-600">
+                    {formatCurrency(part.sellingPrice)}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2 mt-2 pt-3 border-t border-gray-50">
