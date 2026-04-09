@@ -1,38 +1,85 @@
+using GarAgil.Domain.Auth;
+using GarAgil.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace GarAgil.Api.Controllers;
 
-[AllowAnonymous]
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginRequest request)
+    private readonly GarAgilDbContext _context;
+
+    public AuthController(GarAgilDbContext context)
     {
-        // Mock authentication for the prototype
+        _context = context;
+    }
+
+    [AllowAnonymous]
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-        {
-            return Unauthorized(new { message = "Email e senha são obrigatórios." });
-        }
+            return BadRequest(new { message = "Email e senha são obrigatórios." });
 
-        if (request.Email == "admin@garagil.com" && request.Password == "admin123")
-        {
-            return GenerateToken(request.Email, "Admin Oficina", "Admin");
-        }
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email.ToLower());
 
-        if (request.Email == "mecanico@garagil.com" && request.Password == "mecanico123")
-        {
-            return GenerateToken(request.Email, "Mecânico Silva", "Mechanic");
-        }
+        if (user == null)
+            return Unauthorized(new { message = "Email ou senha incorretos." });
 
-        return Unauthorized(new { message = "Credenciais inválidas." });
+        // Verify password
+        if (!VerifyPassword(request.Password, user.PasswordHash))
+            return Unauthorized(new { message = "Email ou senha incorretos." });
+
+        // Check approval status
+        if (user.Status == UserStatus.Pending)
+            return Unauthorized(new { message = "Sua conta ainda está aguardando aprovação do Administrador." });
+        
+        if (user.Status == UserStatus.Rejected)
+            return Unauthorized(new { message = "Sua conta foi rejeitada." });
+
+        return GenerateToken(user.Email, user.Name, user.Role);
+    }
+
+    [AllowAnonymous]
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            return BadRequest(new { message = "Nome, email e senha são obrigatórios." });
+
+        // Check if email already exists
+        if (await _context.Users.AnyAsync(u => u.Email == request.Email.ToLower()))
+            return BadRequest(new { message = "Este email já está em uso." });
+
+        // Simple bootstrapping rule: The first user ever created is automatically an Admin and Approved
+        bool isFirstUser = !await _context.Users.AnyAsync();
+        string role = isFirstUser ? "Admin" : "Mechanic";
+
+        var hash = HashPassword(request.Password);
+        var user = new User(request.Name, request.Email, hash, role);
+        
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        if (user.Status == UserStatus.Approved)
+        {
+            return GenerateToken(user.Email, user.Name, user.Role); // Auto-login for first admin
+        }
+        else
+        {
+            return Ok(new { message = "Conta criada com sucesso! Aguarde a aprovação do administrador para fazer login." });
+        }
     }
 
     private IActionResult GenerateToken(string email, string name, string role)
@@ -61,10 +108,32 @@ public class AuthController : ControllerBase
 
         return Ok(new { Token = tokenString, User = new { Name = name, Email = email, Role = role } });
     }
+
+    // Very simple hashing for prototype purposes. In production use ASP.NET Core Identity's PasswordHasher or BCrypt.
+    private string HashPassword(string password)
+    {
+        using (var sha256 = SHA256.Create())
+        {
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return BitConverter.ToString(hashedBytes).Replace("-", "").ToLowerInvariant();
+        }
+    }
+
+    private bool VerifyPassword(string inputPassword, string storedHash)
+    {
+        return HashPassword(inputPassword) == storedHash;
+    }
 }
 
 public class LoginRequest
 {
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
+
+public class RegisterRequest
+{
+    public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
 }

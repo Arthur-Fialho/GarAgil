@@ -1,3 +1,4 @@
+using GarAgil.Domain.Auth;
 using GarAgil.Domain.CRM;
 using GarAgil.Domain.Financial;
 using GarAgil.Domain.Inventory;
@@ -10,6 +11,7 @@ public class GarAgilDbContext : DbContext
 {
     public GarAgilDbContext(DbContextOptions<GarAgilDbContext> options) : base(options) { }
 
+    public DbSet<User> Users { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
     public DbSet<ServiceOrder> ServiceOrders { get; set; } = null!;
     public DbSet<Part> Parts { get; set; } = null!;
@@ -23,6 +25,7 @@ public class GarAgilDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // Simple mappings for Phase 1. 
+        modelBuilder.Entity<User>().HasKey(u => u.Id);
         modelBuilder.Entity<Customer>().HasKey(c => c.Id);
         
         // Configure backing field for DDD encapsulation

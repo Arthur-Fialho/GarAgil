@@ -20,8 +20,8 @@ public class DuplicateTest : IClassFixture<WebApplicationFactory<Program>>
     public async Task CreateServiceOrder_WhenOpenOrderExists_ShouldReturnBadRequest()
     {
         var client = _factory.CreateClient();
-        var request1 = new { VehiclePlate = "DUP1111", VehicleModel = "Civic", Description = "First" };
-        var request2 = new { VehiclePlate = "DUP1111", VehicleModel = "Civic", Description = "Second" };
+        var request1 = new { VehiclePlate = "ABC1234", VehicleModel = "Civic", Description = "First" };
+        var request2 = new { VehiclePlate = "ABC1234", VehicleModel = "Civic", Description = "Second" };
 
         var r1 = await client.PostAsJsonAsync("/api/serviceorders", request1);
         r1.StatusCode.Should().Be(HttpStatusCode.Created);

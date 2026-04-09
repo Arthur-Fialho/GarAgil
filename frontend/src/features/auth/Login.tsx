@@ -5,9 +5,15 @@ import Button from '../../components/Button';
 import api from '../../services/api';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('admin@garagil.com');
-  const [password, setPassword] = useState('admin123');
+  const [isRegistering, setIsRegistering] = useState(false);
+  
+  // Form State
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   const { login } = useAuth();
@@ -15,26 +21,41 @@ const Login: React.FC = () => {
   const location = useLocation();
   const from = (location.state as any)?.from?.pathname || '/';
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMsg('');
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
-      login(response.data.token, response.data.user);
-      navigate(from, { replace: true });
+      if (isRegistering) {
+        const response = await api.post('/auth/register', { name, email, password });
+        if (response.data.token) {
+          // Admin auto-login fallback
+          login(response.data.token, response.data.user);
+          navigate(from, { replace: true });
+        } else {
+          // Pending mechanic
+          setSuccessMsg(response.data.message);
+          setIsRegistering(false);
+          setEmail('');
+          setPassword('');
+          setName('');
+        }
+      } else {
+        const response = await api.post('/auth/login', { email, password });
+        login(response.data.token, response.data.user);
+        navigate(from, { replace: true });
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao realizar login.');
+      setError(err.response?.data?.message || 'Erro de conexão.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    // Mock Google SSO for the prototype
-    login('mock-google-sso-token', { name: 'Google Admin', email: 'admin@garagil.com' });
-    navigate(from, { replace: true });
+    alert('Autenticação com Google será ativada em produção.');
   };
 
   return (
@@ -50,39 +71,53 @@ const Login: React.FC = () => {
             GarAgil Workspace
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Acesso restrito para administradores
+            {isRegistering ? 'Crie sua conta para acessar' : 'Acesse o sistema da oficina'}
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 p-3 rounded-md border border-red-200 text-sm text-red-600 text-center">
+            <div className="bg-red-50 p-3 rounded-md border border-red-200 text-sm text-red-600 text-center font-medium">
               {error}
+            </div>
+          )}
+          {successMsg && (
+            <div className="bg-green-50 p-3 rounded-md border border-green-200 text-sm text-green-700 text-center font-medium">
+              {successMsg}
             </div>
           )}
           
           <div className="space-y-4">
+            {isRegistering && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Nome Completo</label>
+                <input
+                  type="text"
+                  required
+                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm shadow-sm"
+                  placeholder="Seu nome"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            )}
             <div>
-              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700">Email</label>
               <input
-                id="email-address"
-                name="email"
                 type="email"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm shadow-sm"
-                placeholder="admin@garagil.com"
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm shadow-sm"
+                placeholder="seu@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.toLowerCase())}
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Senha</label>
+              <label className="block text-sm font-medium text-gray-700">Senha</label>
               <input
-                id="password"
-                name="password"
                 type="password"
                 required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm shadow-sm"
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm shadow-sm"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -92,8 +127,18 @@ const Login: React.FC = () => {
 
           <div>
             <Button type="submit" disabled={isLoading} className="w-full py-2.5 shadow-md">
-              {isLoading ? 'Entrando...' : 'Entrar no Sistema'}
+              {isLoading ? 'Processando...' : (isRegistering ? 'Criar Conta' : 'Entrar no Sistema')}
             </Button>
+          </div>
+
+          <div className="flex justify-center text-sm">
+            <button 
+              type="button" 
+              onClick={() => { setIsRegistering(!isRegistering); setError(''); setSuccessMsg(''); }} 
+              className="text-primary hover:underline font-medium"
+            >
+              {isRegistering ? 'Já tenho uma conta. Fazer Login' : 'Não tem conta? Criar Cadastro'}
+            </button>
           </div>
 
           <div className="mt-6">
@@ -107,11 +152,11 @@ const Login: React.FC = () => {
             </div>
 
             <div className="mt-6">
-              <Button type="button" variant="secondary" className="w-full flex items-center justify-center gap-2" onClick={handleGoogleLogin}>
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <Button type="button" variant="secondary" className="w-full flex items-center justify-center gap-2 text-gray-400 cursor-not-allowed" onClick={handleGoogleLogin}>
+                <svg className="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
                 </svg>
-                Google SSO
+                Google (Em Breve)
               </Button>
             </div>
           </div>
@@ -122,3 +167,4 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
