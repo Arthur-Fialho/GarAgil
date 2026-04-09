@@ -8,66 +8,74 @@ namespace GarAgil.Tests.Domain.Inventory;
 public class PartTests
 {
     [Fact]
-    public void Constructor_WhenCreated_ShouldInitializeWithProvidedValues()
+    public void Constructor_WithValidData_ShouldCreatePart()
     {
-        // Arrange
-        var name = "Filtro de Óleo";
-        var sku = "FO-1234";
-        var costPrice = 25.50m;
-        var sellingPrice = 45.00m;
-        var initialStock = 10;
+        var part = new Part("Filtro", "FO-123", 10.0m, 20.0m, 5);
 
-        // Act
-        var part = new Part(name, sku, costPrice, sellingPrice, initialStock);
-
-        // Assert
-        part.Name.Should().Be(name);
-        part.Sku.Should().Be(sku);
-        part.CostPrice.Should().Be(costPrice);
-        part.SellingPrice.Should().Be(sellingPrice);
-        part.CurrentStock.Should().Be(initialStock);
+        part.Name.Should().Be("Filtro");
+        part.Sku.Should().Be("FO-123");
+        part.CostPrice.Should().Be(10.0m);
+        part.SellingPrice.Should().Be(20.0m);
+        part.CurrentStock.Should().Be(5);
     }
 
     [Fact]
-    public void Constructor_WhenSellingPriceIsLowerThanCostPrice_ShouldThrowException()
+    public void Constructor_WithInvalidMargin_ShouldThrowArgumentException()
     {
-        // Arrange
-        var name = "Correia Dentada";
-        var sku = "CD-987";
-        var costPrice = 100.00m;
-        var sellingPrice = 90.00m; // Invalid markup
-        var initialStock = 5;
+        Action act = () => new Part("Filtro", "FO-123", 20.0m, 10.0m, 5);
 
-        // Act
-        Action act = () => new Part(name, sku, costPrice, sellingPrice, initialStock);
-
-        // Assert
         act.Should().Throw<ArgumentException>().WithMessage("Preço de venda não pode ser menor que o custo.");
     }
 
     [Fact]
-    public void RemoveStock_WhenQuantityIsAvailable_ShouldDecreaseStock()
+    public void AddStock_WithValidQuantity_ShouldIncreaseStock()
     {
-        // Arrange
-        var part = new Part("Bomba D'água", "BD-456", 150.00m, 250.00m, 10);
+        var part = new Part("Filtro", "FO-123", 10.0m, 20.0m, 5);
 
-        // Act
-        part.RemoveStock(3);
+        part.AddStock(10);
 
-        // Assert
-        part.CurrentStock.Should().Be(7);
+        part.CurrentStock.Should().Be(15);
     }
 
     [Fact]
-    public void RemoveStock_WhenQuantityExceedsAvailable_ShouldThrowException()
+    public void AddStock_WithNegativeQuantity_ShouldThrowArgumentException()
     {
-        // Arrange
-        var part = new Part("Vela de Ignição", "VI-001", 20.00m, 40.00m, 4);
+        var part = new Part("Filtro", "FO-123", 10.0m, 20.0m, 5);
 
-        // Act
-        Action act = () => part.RemoveStock(5);
+        Action act = () => part.AddStock(-5);
 
-        // Assert
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void RemoveStock_WithValidQuantity_ShouldDecreaseStock()
+    {
+        var part = new Part("Filtro", "FO-123", 10.0m, 20.0m, 15);
+
+        part.RemoveStock(5);
+
+        part.CurrentStock.Should().Be(10);
+    }
+
+    [Fact]
+    public void RemoveStock_WithInsufficientStock_ShouldThrowInvalidOperationException()
+    {
+        var part = new Part("Filtro", "FO-123", 10.0m, 20.0m, 5);
+
+        Action act = () => part.RemoveStock(10);
+
         act.Should().Throw<InvalidOperationException>().WithMessage("Estoque insuficiente.");
+    }
+
+    [Fact]
+    public void Update_WithValidData_ShouldUpdatePricesAndName()
+    {
+        var part = new Part("Filtro", "FO-123", 10.0m, 20.0m, 5);
+
+        part.Update("Filtro Premium", "FO-123", 15.0m, 30.0m);
+
+        part.Name.Should().Be("Filtro Premium");
+        part.CostPrice.Should().Be(15.0m);
+        part.SellingPrice.Should().Be(30.0m);
     }
 }

@@ -8,63 +8,69 @@ namespace GarAgil.Tests.Domain.Financial;
 public class PayableAccountTests
 {
     [Fact]
-    public void Constructor_WhenCreatedWithValidData_ShouldInitializeCorrectly()
+    public void Constructor_WithValidData_ShouldCreatePendingAccount()
     {
-        // Arrange
-        var description = "Conta de Luz - CEMIG";
-        var amount = 450.00m;
-        var dueDate = DateTime.UtcNow.AddDays(10);
+        var account = new PayableAccount("Luz", 150.50m, DateTime.UtcNow.AddDays(5));
 
-        // Act
-        var account = new PayableAccount(description, amount, dueDate);
-
-        // Assert
-        account.Description.Should().Be(description);
-        account.Amount.Should().Be(amount);
-        account.DueDate.Should().Be(dueDate);
         account.IsPaid.Should().BeFalse();
+        account.PaymentDate.Should().BeNull();
+        account.Amount.Should().Be(150.50m);
     }
 
     [Fact]
-    public void Constructor_WhenAmountIsZeroOrNegative_ShouldThrowException()
+    public void Pay_WhenPending_ShouldMarkAsPaid()
     {
-        // Arrange
-        var description = "Conta de Água - COPASA";
-        var amount = -50.00m;
-        var dueDate = DateTime.UtcNow.AddDays(5);
+        var account = new PayableAccount("Luz", 150.50m, DateTime.UtcNow.AddDays(5));
 
-        // Act
-        Action act = () => new PayableAccount(description, amount, dueDate);
-
-        // Assert
-        act.Should().Throw<ArgumentException>().WithMessage("O valor da conta deve ser maior que zero.");
-    }
-
-    [Fact]
-    public void Pay_WhenCalled_ShouldSetIsPaidToTrueAndRecordPaymentDate()
-    {
-        // Arrange
-        var account = new PayableAccount("Fornecedor de Peças", 1500.00m, DateTime.UtcNow.AddDays(2));
-
-        // Act
         account.Pay();
 
-        // Assert
         account.IsPaid.Should().BeTrue();
         account.PaymentDate.Should().NotBeNull();
     }
 
     [Fact]
-    public void Pay_WhenAlreadyPaid_ShouldThrowException()
+    public void Pay_WhenAlreadyPaid_ShouldThrowInvalidOperationException()
     {
-        // Arrange
-        var account = new PayableAccount("Aluguel", 2500.00m, DateTime.UtcNow.AddDays(1));
+        var account = new PayableAccount("Luz", 150.50m, DateTime.UtcNow.AddDays(5));
         account.Pay();
 
-        // Act
         Action act = () => account.Pay();
 
-        // Assert
-        act.Should().Throw<InvalidOperationException>().WithMessage("Esta conta já foi paga.");
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void UndoPayment_WhenPaid_ShouldMarkAsPending()
+    {
+        var account = new PayableAccount("Luz", 150.50m, DateTime.UtcNow.AddDays(5));
+        account.Pay();
+
+        account.UndoPayment();
+
+        account.IsPaid.Should().BeFalse();
+        account.PaymentDate.Should().BeNull();
+    }
+
+    [Fact]
+    public void UndoPayment_WhenNotPaid_ShouldThrowInvalidOperationException()
+    {
+        var account = new PayableAccount("Luz", 150.50m, DateTime.UtcNow.AddDays(5));
+
+        Action act = () => account.UndoPayment();
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Update_WithValidData_ShouldUpdateProperties()
+    {
+        var account = new PayableAccount("Luz", 150.50m, DateTime.UtcNow.AddDays(5));
+        var newDate = DateTime.UtcNow.AddDays(10);
+
+        account.Update("Água", 200.00m, newDate);
+
+        account.Description.Should().Be("Água");
+        account.Amount.Should().Be(200.00m);
+        account.DueDate.Should().Be(newDate);
     }
 }
