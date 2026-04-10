@@ -11,17 +11,22 @@ Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load the connection string from Environment Variable (loaded by DotNetEnv)
+// Load the connection string from Environment Variable (loaded by DotNetEnv or Docker)
 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 
-if (string.IsNullOrEmpty(connectionString))
+string dbPath;
+if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("Data Source="))
 {
-    // Fallback specifically for EF Core tools (like dotnet ef migrations) if run from a directory where .env is not traversed
-    connectionString = "Host=localhost;Database=GarAgilDb;Username=postgres;Password=SuperSecretPassword123!";
+    // Used in Docker to point to mounted volume (e.g., Data Source=/app/data/garagil.db)
+    dbPath = connectionString.Replace("Data Source=", "");
+}
+else
+{
+    // Default local execution
+    dbPath = System.IO.Path.Join(Environment.CurrentDirectory, "garagil.db");
 }
 
 // Register DbContext with SQLite for local persistence
-var dbPath = System.IO.Path.Join(Environment.CurrentDirectory, "garagil.db");
 builder.Services.AddDbContext<GarAgilDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
